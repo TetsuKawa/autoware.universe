@@ -20,8 +20,8 @@
 
 #include <tf2_msgs/msg/tf_message.hpp>
 
-#include <string>
 #include <memory>
+#include <string>
 
 namespace autoware::topic_relay_controller
 {
