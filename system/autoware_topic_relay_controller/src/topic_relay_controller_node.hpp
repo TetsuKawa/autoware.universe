@@ -21,6 +21,7 @@
 #include <tf2_msgs/msg/tf_message.hpp>
 
 #include <string>
+#include <memory>
 
 namespace autoware::topic_relay_controller
 {
