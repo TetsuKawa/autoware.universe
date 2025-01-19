@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TOPIC_RELAY_CONTROLLER_HPP_
-#define TOPIC_RELAY_CONTROLLER_HPP_
+#ifndef TOPIC_RELAY_CONTROLLER_NODE_HPP_
+#define TOPIC_RELAY_CONTROLLER_NODE_HPP_
 
 // ROS 2 core
 #include <rclcpp/rclcpp.hpp>
@@ -29,4 +29,4 @@ private:
 };
 }  // namespace autoware::topic_relay_controller
 
-#endif  // TOPIC_RELAY_CONTROLLER_HPP_
+#endif  // TOPIC_RELAY_CONTROLLER_NODE_HPP_

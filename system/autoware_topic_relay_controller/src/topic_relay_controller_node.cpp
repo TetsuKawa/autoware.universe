@@ -15,11 +15,12 @@
 
 namespace autoware::topic_relay_controller
 {
-TopicRelayController::TopicRelayController(const rclcpp::NodeOptions & options) : Node("topic_relay_controller", options)
+TopicRelayController::TopicRelayController(const rclcpp::NodeOptions & options)
+: Node("topic_relay_controller", options)
 {
   RCLCPP_INFO(get_logger(), "topic_relay_controller_node started.");
 }
-} // namespace autoware::topic_relay_controller
+}  // namespace autoware::topic_relay_controller
 
 #include <rclcpp_components/register_node_macro.hpp>
 RCLCPP_COMPONENTS_REGISTER_NODE(autoware::topic_relay_controller::TopicRelayController)

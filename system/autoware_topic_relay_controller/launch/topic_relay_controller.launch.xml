@@ -1,4 +1,3 @@
 <launch>
-  <node pkg="autoware_topic_relay_controller" exec="autoware_topic_relay_controller_node" name="topic_relay_controller" output="screen">
-  </node>
+  <node pkg="autoware_topic_relay_controller" exec="autoware_topic_relay_controller_node" name="topic_relay_controller" output="screen"/>
 </launch>
