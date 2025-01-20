@@ -1,8 +1,8 @@
 <launch>
-  <arg name="node_name_suffix" description="node name suffix"/>
-  <arg name="topic_name" description="output topic name"/>
-  <arg name="topic_type" description="output topic type"/>
-  <arg name="topic_value_yaml_path" description="output topic value"/>
+  <arg name="node_name_suffix" default="test" description="node name suffix"/>
+  <arg name="topic_name" default="/test" description="output topic name"/>
+  <arg name="topic_type" default="std_msgs::msg::String" description="output topic type"/>
+  <arg name="topic_value_yaml_path" default="$(find-pkg-share autoware_dummy_topic_publisher)/config/topic_value.yaml" description="output topic value"/>
   <arg name="qos" default="1" description="QoS profile"/>
   <arg name="transient_local" default="false" description="add transient_local option to publisher or not"/>
   <arg name="best_effort" default="false" description="add best_effort option to publisher or not"/>
