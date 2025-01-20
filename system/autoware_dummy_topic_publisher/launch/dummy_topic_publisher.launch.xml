@@ -1,0 +1,7 @@
+<launch>
+  <arg name="config_file" default="$(find-pkg-share autoware_dummy_topic_publisher)/config/dummy_topic_publisher.yaml" description="config file path"/>
+
+  <node pkg="autoware_dummy_topic_publisher" exec="autoware_dummy_topic_publisher_node" name="dummy_topic_publisher" output="screen">
+    <param from="$(var config_file)"/>
+  </node>
+</launch>
