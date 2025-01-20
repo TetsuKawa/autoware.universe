@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TOPIC_RELAY_CONTROLLER_HPP_
-#define TOPIC_RELAY_CONTROLLER_HPP_
+#ifndef TOPIC_RELAY_CONTROLLER_NODE_HPP_
+#define TOPIC_RELAY_CONTROLLER_NODE_HPP_
 
 // ROS 2 core
 #include <rclcpp/rclcpp.hpp>
@@ -39,6 +39,8 @@ struct NodeParam
   bool is_transform;
   bool enable_relay_control;
   std::string srv_name;
+  bool enable_keep_publishing;
+  int update_rate;
 };
 
 class TopicRelayController : public rclcpp::Node
@@ -59,11 +61,17 @@ private:
   rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr pub_transform_;
 
   // Service
-  rclcpp::Service<tier4_system_msgs::srv::ChangeTopicRelayControl>::SharedPtr srv_change_relay_control_;
+  rclcpp::Service<tier4_system_msgs::srv::ChangeTopicRelayControl>::SharedPtr
+    srv_change_relay_control_;
+
+  // Timer
+  rclcpp::TimerBase::SharedPtr timer_;
 
   // State
   bool is_relaying_;
+  tf2_msgs::msg::TFMessage::SharedPtr last_tf_topic_;
+  std::shared_ptr<rclcpp::SerializedMessage> last_topic_;
 };
 }  // namespace autoware::topic_relay_controller
 
-#endif  // TOPIC_RELAY_CONTROLLER_HPP_
+#endif  // TOPIC_RELAY_CONTROLLER_NODE_HPP_
