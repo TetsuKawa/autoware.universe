@@ -19,15 +19,15 @@
 #include <autoware/motion_utils/trajectory/trajectory.hpp>
 #include <autoware/motion_velocity_planner_common_universe/collision_checker.hpp>
 #include <autoware/route_handler/route_handler.hpp>
-#include <autoware/universe_utils/geometry/boost_polygon_utils.hpp>
 #include <autoware/velocity_smoother/smoother/smoother_base.hpp>
+#include <autoware_utils/geometry/boost_polygon_utils.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info_utils.hpp>
 
 #include <autoware_map_msgs/msg/lanelet_map_bin.hpp>
 #include <autoware_perception_msgs/msg/predicted_objects.hpp>
 #include <autoware_perception_msgs/msg/traffic_light_group.hpp>
 #include <autoware_perception_msgs/msg/traffic_light_group_array.hpp>
-#include <autoware_planning_msgs/msg/trajectory.hpp>
+#include <autoware_planning_msgs/msg/trajectory_point.hpp>
 #include <geometry_msgs/msg/accel_with_covariance_stamped.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <nav_msgs/msg/odometry.hpp>
@@ -53,6 +53,13 @@ struct TrafficSignalStamped
   autoware_perception_msgs::msg::TrafficLightGroup signal;
 };
 
+struct StopPoint
+{
+  double ego_trajectory_arc_length{};  // [m] arc length along the ego trajectory
+  geometry_msgs::msg::Pose
+    ego_stop_pose;                       // intersection between the trajectory and a map stop line
+  lanelet::BasicLineString2d stop_line;  // stop line from the map
+};
 struct TrajectoryPolygonCollisionCheck
 {
   double decimate_trajectory_step_length;
@@ -68,7 +75,7 @@ struct PlannerData
   {
   }
 
-  struct Object
+  class Object
   {
   public:
     Object() = default;
@@ -80,7 +87,7 @@ struct PlannerData
     autoware_perception_msgs::msg::PredictedObject predicted_object;
 
     double get_dist_to_traj_poly(
-      const std::vector<autoware::universe_utils::Polygon2d> & decimated_traj_polys) const;
+      const std::vector<autoware_utils::Polygon2d> & decimated_traj_polys) const;
     double get_dist_to_traj_lateral(const std::vector<TrajectoryPoint> & traj_points) const;
     double get_dist_from_ego_longitudinal(
       const std::vector<TrajectoryPoint> & traj_points,
@@ -153,24 +160,20 @@ struct PlannerData
    *recent UNKNOWN observation is overwritten as the last non-UNKNOWN observation
    */
   [[nodiscard]] std::optional<TrafficSignalStamped> get_traffic_signal(
-    const lanelet::Id id, const bool keep_last_observation = false) const
-  {
-    const auto & traffic_light_id_map =
-      keep_last_observation ? traffic_light_id_map_last_observed_ : traffic_light_id_map_raw_;
-    if (traffic_light_id_map.count(id) == 0) {
-      return std::nullopt;
-    }
-    return std::make_optional<TrafficSignalStamped>(traffic_light_id_map.at(id));
-  }
+    const lanelet::Id id, const bool keep_last_observation = false) const;
 
+  /// @brief calculate possible stop points along the current trajectory where it intersects with
+  /// stop lines
+  /// @param [in] trajectory ego trajectory
+  /// @return stop points taken from the map
+  [[nodiscard]] std::vector<StopPoint> calculate_map_stop_points(
+    const std::vector<autoware_planning_msgs::msg::TrajectoryPoint> & trajectory) const;
+
+  /// @brief calculate the minimum distance needed by ego to decelerate to the given velocity
+  /// @param [in] target_velocity [m/s] target velocity
+  /// @return [m] distance needed to reach the target velocity
   [[nodiscard]] std::optional<double> calculate_min_deceleration_distance(
-    const double target_velocity) const
-  {
-    return motion_utils::calcDecelDistWithJerkAndAccConstraints(
-      current_odometry.twist.twist.linear.x, target_velocity,
-      current_acceleration.accel.accel.linear.x, velocity_smoother_->getMinDecel(),
-      std::abs(velocity_smoother_->getMinJerk()), velocity_smoother_->getMinJerk());
-  }
+    const double target_velocity) const;
 
   size_t find_index(
     const std::vector<TrajectoryPoint> & traj_points, const geometry_msgs::msg::Pose & pose) const
