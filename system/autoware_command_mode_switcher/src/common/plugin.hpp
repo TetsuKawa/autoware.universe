@@ -15,12 +15,9 @@
 #ifndef COMMON__PLUGIN_HPP_
 #define COMMON__PLUGIN_HPP_
 
-#include "common/context.hpp"
+#include "common/transition.hpp"
 
 #include <rclcpp/rclcpp.hpp>
-
-#include <tier4_system_msgs/msg/command_mode_status_item.hpp>
-#include <tier4_system_msgs/msg/command_source_status.hpp>
 
 #include <memory>
 #include <string>
@@ -28,24 +25,26 @@
 namespace autoware::command_mode_switcher
 {
 
-using tier4_system_msgs::msg::CommandModeStatusItem;
-using tier4_system_msgs::msg::CommandSourceStatus;
-
 class SwitcherPlugin
 {
 public:
-  void construct(std::shared_ptr<SwitcherContext> context);
+  void construct(rclcpp::Node * node);
   auto status() const { return status_; }
+  auto source_status() const { return source_status_; }
+
+  void request(SwitcherState target);
+  void override();
+  void update_status(const TransitionContext & context);
 
   virtual ~SwitcherPlugin() = default;
-  virtual std::string name() const = 0;
-  virtual std::string source() const = 0;
-  virtual void request(bool activate);
-  virtual void on_source_status(const CommandSourceStatus & msg);
-  // TODO(Isamu, Takagi): private
-protected:
+  virtual std::string mode_name() const = 0;
+  virtual std::string source_name() const = 0;
+  virtual void update_source_status();
+
+private:
+  rclcpp::Node * node_;
   CommandModeStatusItem status_;
-  std::shared_ptr<SwitcherContext> context_;
+  SourceStatus source_status_;
 };
 
 }  // namespace autoware::command_mode_switcher

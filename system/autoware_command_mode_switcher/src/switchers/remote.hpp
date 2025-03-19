@@ -25,8 +25,8 @@ namespace autoware::command_mode_switcher
 class RemoteSwitcher : public SwitcherPlugin
 {
 public:
-  std::string name() const override { return "remote"; }
-  std::string source() const override { return "remote"; }
+  std::string mode_name() const override { return "remote"; }
+  std::string source_name() const override { return "remote"; }
 };
 
 }  // namespace autoware::command_mode_switcher

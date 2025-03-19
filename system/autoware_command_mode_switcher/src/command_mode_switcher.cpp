@@ -38,20 +38,20 @@ CommandModeSwitcher::CommandModeSwitcher(const rclcpp::NodeOptions & options)
 
   // Init switchers
   {
-    const auto context = std::make_shared<SwitcherContext>(*this);
     const auto plugins = declare_parameter<std::vector<std::string>>("plugins");
+
     for (const auto & plugin : plugins) {
       if (!loader_.isClassAvailable(plugin)) {
         RCLCPP_WARN_STREAM(get_logger(), "ignore unknown plugin: " << plugin);
         continue;
       }
       const auto switcher = loader_.createSharedInstance(plugin);
-      if (switchers_.count(switcher->name())) {
+      if (switchers_.count(switcher->mode_name())) {
         RCLCPP_WARN_STREAM(get_logger(), "ignore duplicate plugin: " << plugin);
         continue;
       }
-      switcher->construct(context);
-      switchers_[switcher->name()] = switcher;
+      switcher->construct(this);
+      switchers_[switcher->mode_name()] = switcher;
     }
   }
 
@@ -61,13 +61,24 @@ CommandModeSwitcher::CommandModeSwitcher(const rclcpp::NodeOptions & options)
 
 void CommandModeSwitcher::on_timer()
 {
-}
-
-void CommandModeSwitcher::on_source_status(const CommandSourceStatus & msg)
-{
+  // NOTE: Update the source status first since the transition context depends on.
   for (const auto & [mode, switcher] : switchers_) {
-    switcher->on_source_status(msg);
+    switcher->update_source_status();
   }
+
+  for (const auto & [mode, switcher] : switchers_) {
+    TransitionContext context;
+    context.is_source_ready = switcher->source_status() == SourceStatus::Enabled;
+    context.is_source_exclusive = false;
+    context.is_source_selected = false;
+    context.is_control_selected = false;
+    switcher->update_status(context);
+  }
+
+  if (next_mode_) {
+    // TODO(Takagi, Isamu): update
+  }
+
   publish_command_mode_status();
 }
 
@@ -75,13 +86,26 @@ void CommandModeSwitcher::on_request(const CommandModeRequest & msg)
 {
   const auto iter = switchers_.find(msg.mode);
   if (iter == switchers_.end()) {
-    RCLCPP_ERROR_STREAM(get_logger(), "CommandModeSwitcher on_request: invalid mode: " << msg.mode);
+    RCLCPP_ERROR_STREAM(get_logger(), "invalid mode: " << msg.ctrl << " " << msg.mode);
     return;
   }
 
+  // TODO(Takagi, Isamu): ABORT curr if curr/next command source is same.
+  const auto mode = iter->second;
+  mode->request(msg.ctrl ? CommandModeStatusItem::ENABLED : CommandModeStatusItem::STANDBY);
+
+  next_mode_ = mode;
+}
+
+void CommandModeSwitcher::on_source_status(const CommandSourceStatus & msg)
+{
+  (void)msg;
+  /*
   for (const auto & [mode, switcher] : switchers_) {
-    switcher->request(mode == msg.mode);
+    switcher->on_source_status(msg);
   }
+  publish_command_mode_status();
+  */
 }
 
 void CommandModeSwitcher::publish_command_mode_status()
