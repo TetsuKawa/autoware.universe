@@ -20,6 +20,9 @@ ament_auto_add_library(${PROJECT_NAME}_plugin SHARED
   "src/switchers/emergency_stop.cpp"
   "src/switchers/comfortable_stop.cpp"
   "src/switchers/pull_over.cpp"
+  "src/switchers/main_ecu_in_lane_stop_0_4g.cpp"
+  "src/switchers/main_ecu_in_lane_stop_0_6g.cpp"
+  "src/switchers/sub_ecu_in_lane_stop_0_4g.cpp"
 )
 target_include_directories(${PROJECT_NAME}_common PRIVATE "src")
 target_include_directories(${PROJECT_NAME}_plugin PRIVATE "src")
