@@ -44,7 +44,7 @@ if(NVINFER AND NVONNXPARSER)
   endif()
   set(TRT_AVAIL ON)
 else()
-  message("TensorRT is NOT Available")
+  message("TensorRT is NOT available")
   set(TRT_AVAIL OFF)
 endif()
 
@@ -64,7 +64,7 @@ if(CUDNN_LIBRARY)
   endif()
   set(CUDNN_AVAIL ON)
 else()
-  message("CUDNN is NOT Available")
+  message("CUDNN is NOT available")
   set(CUDNN_AVAIL OFF)
 endif()
 
@@ -77,7 +77,7 @@ if(${cumm_FOUND} AND ${spconv_FOUND})
   message("spconv is available!")
   set(SPCONV_AVAIL ON)
 else()
-  message("spconv is NOT Available")
+  message("spconv is NOT available")
   set(SPCONV_AVAIL OFF)
 endif()
 
@@ -101,31 +101,6 @@ if(TRT_AVAIL AND CUDA_AVAIL AND CUDNN_AVAIL AND SPCONV_AVAIL)
 
   # cSpell:ignore expt
   list(APPEND CUDA_NVCC_FLAGS "--expt-relaxed-constexpr -diag-suppress 1675 --extended-lambda")
-
-  cuda_add_library(bev_ops SHARED
-    src/bev_ops/bev_pool_cuda.cu
-  )
-
-  add_library(autoware_tensorrt_plugins SHARED
-    src/tensorrt_plugins/plugin_utils.cpp
-    src/tensorrt_plugins/quick_cumsum_cuda_plugin.cpp
-    src/tensorrt_plugins/quick_cumsum_cuda_plugin_creator.cpp
-    src/tensorrt_plugins/get_indices_pairs_implicit_gemm_plugin_creator.cpp
-    src/tensorrt_plugins/get_indices_pairs_implicit_gemm_plugin.cpp
-    src/tensorrt_plugins/implicit_gemm_plugin_creator.cpp
-    src/tensorrt_plugins/implicit_gemm_plugin.cpp
-
-    src/tensorrt_plugins/plugin_registration.cpp
-  )
-
-  target_compile_definitions(autoware_tensorrt_plugins PRIVATE _GLIBCXX_USE_CXX11_ABI=1)
-
-  target_link_libraries(autoware_tensorrt_plugins PRIVATE
-      ${NVINFER}
-      CUDA::cudart
-      bev_ops
-      spconv::spconv
-  )
 
   cuda_add_library(${PROJECT_NAME}_cuda_lib SHARED
     lib/postprocess/circle_nms_kernel.cu
@@ -171,7 +146,7 @@ if(TRT_AVAIL AND CUDA_AVAIL AND CUDNN_AVAIL AND SPCONV_AVAIL)
   target_include_directories(${PROJECT_NAME}_lib
     SYSTEM PUBLIC
     ${CUDA_INCLUDE_DIRS}
-    $(autoware_point_types_INCLUDE_DIRS)
+    ${autoware_point_types_INCLUDE_DIRS}
   )
 
   ament_auto_add_library(${PROJECT_NAME}_component SHARED
@@ -190,11 +165,6 @@ if(TRT_AVAIL AND CUDA_AVAIL AND CUDNN_AVAIL AND SPCONV_AVAIL)
   install(
     TARGETS ${PROJECT_NAME}_cuda_lib
     DESTINATION lib
-  )
-
-  install(
-    TARGETS autoware_tensorrt_plugins
-    DESTINATION share/${PROJECT_NAME}/plugins
   )
 
   ament_auto_package(
