@@ -17,6 +17,7 @@
 
 #include "common/plugin.hpp"
 
+#include <memory>
 #include <string>
 
 namespace autoware::command_mode_switcher
@@ -24,9 +25,11 @@ namespace autoware::command_mode_switcher
 
 class EmergencyStopSwitcher : public SwitcherPlugin
 {
-public:
-  std::string name() const override { return "emergency_stop"; }
-  std::string source() const override { return "emergency_stop"; }
+  explicit Command(std::shared_ptr<CommandPlugin> plugin, std::string plugin_name = "");
+
+  std::shared_ptr<CommandPlugin> plugin;
+  CommandStatus status;
+  std::string plugin_name;
 };
 
 }  // namespace autoware::command_mode_switcher

@@ -50,10 +50,27 @@ CommandModeSwitcher::CommandModeSwitcher(const rclcpp::NodeOptions & options)
         RCLCPP_WARN_STREAM(get_logger(), "ignore duplicate plugin: " << plugin);
         continue;
       }
-      switcher->construct(context);
-      switchers_[switcher->name()] = switcher;
+
+      const auto command = std::make_shared<Command>(instance, plugin);
+      autoware_commands_[command->plugin->mode()] = command;
+      commands_.push_back(command);
     }
   }
+
+  // Initialize all switchers. Call "construct" first, which acts as the base class constructor.
+  for (const auto & command : commands_) {
+    command->plugin->construct(this, command->plugin_name);
+    command->plugin->initialize();
+  }
+
+  pub_status_ = create_publisher<CommandModeStatusAdapter>(
+    "~/command_mode/status", rclcpp::QoS(1).transient_local());
+  sub_request_ = create_subscription<CommandModeRequest>(
+    "~/command_mode/request", rclcpp::QoS(1),
+    std::bind(&CommandModeSwitcher::on_request, this, std::placeholders::_1));
+  sub_availability_ = create_subscription<CommandModeAvailability>(
+    "~/command_mode/availability", rclcpp::QoS(1),
+    std::bind(&CommandModeSwitcher::on_availability, this, std::placeholders::_1));
 
   const auto period = rclcpp::Rate(declare_parameter<double>("update_rate")).period();
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this]() { on_timer(); });
