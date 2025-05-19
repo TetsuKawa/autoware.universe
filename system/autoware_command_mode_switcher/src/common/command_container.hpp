@@ -25,9 +25,10 @@ namespace autoware::command_mode_switcher
 
 struct Command
 {
-  explicit Command(std::shared_ptr<CommandPlugin> plugin);
+  explicit Command(std::shared_ptr<CommandPlugin> plugin, const std::string & plugin_name = "");
 
   std::shared_ptr<CommandPlugin> plugin;
+  std::string plugin_name;
   CommandStatus status;
 };
 
