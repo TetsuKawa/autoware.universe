@@ -55,6 +55,7 @@ CommandModeSwitcher::CommandModeSwitcher(const rclcpp::NodeOptions & options)
       }
 
       const auto command = std::make_shared<Command>(instance);
+      command->plugin->set_plugin_name(plugin);
       autoware_commands_[command->plugin->mode()] = command;
       commands_.push_back(command);
     }
