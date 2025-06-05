@@ -53,8 +53,8 @@ Graph::Graph(const std::string & path, const std::string & id, const Logger & lo
         parent_links[child].push_back(link->link.get());
         child_links[parent].push_back(link->link.get());
       }
-      if (parent->diag) {
-        const auto & [link, child] = parent->diag.value();
+      if (parent->diag_link) {
+        const auto & [link, child] = parent->diag_link.value();
         parent_unit[link] = parent;
         child_unit[link] = child;
         parent_links[child].push_back(link->link.get());

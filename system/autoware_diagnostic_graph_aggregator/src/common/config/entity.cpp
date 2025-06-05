@@ -55,7 +55,7 @@ UnitLink * LogicConfig::parse_diag(ConfigYaml yaml) const
 {
   const auto link = std::make_shared<LinkConfigData>();
   const auto diag = std::make_shared<UnitConfigData>(yaml);
-  unit_->diag = std::make_pair(link, diag);
+  unit_->diag_link = std::make_pair(link, diag);
   return link->link.get();
 }
 

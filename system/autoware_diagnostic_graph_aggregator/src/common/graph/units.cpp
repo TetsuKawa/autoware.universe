@@ -102,7 +102,7 @@ DiagUnit::DiagUnit(const std::vector<UnitLink *> parents, const UnitConfig & con
   timeout_ = std::make_unique<TimeoutLevel>(config->yaml);
   histeresis_ = std::make_unique<HysteresisLevel>(config->yaml);
 
-  struct_.name = config->data;
+  struct_.name = config->diag_name;
   status_.level = DiagnosticStatus::STALE;
 }
 

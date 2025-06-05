@@ -87,7 +87,7 @@ void dump_unit_list(const std::string & path)
   for (const auto & unit : graph.units) {
     std::cout << unit.use_count() << " " << unit->type << "(" << unit->path << ")" << std::endl;
     for (const auto & [link, child] : unit->links) {
-      std::cout << " - " << child->path << " ### " << child->link << std::endl;
+      std::cout << " - " << child->path << " ### " << child->link_path << std::endl;
     }
   }
 }
@@ -100,7 +100,7 @@ void dump_config(const std::string & path)
   for (const auto & unit : graph.units) {
     std::cout << unit.use_count() << " " << unit->type << "(" << unit->path << ")" << std::endl;
     for (const auto & [link, child] : unit->links) {
-      std::cout << " - " << child->path << " ### " << child->link << std::endl;
+      std::cout << " - " << child->path << " ### " << child->link_path << std::endl;
     }
   }
 }

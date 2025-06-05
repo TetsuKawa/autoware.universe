@@ -49,12 +49,14 @@ struct UnitConfigData
   explicit UnitConfigData(ConfigYaml yaml);
   std::string type;
   std::string path;
-  std::string link;
-  std::string data;
   std::unique_ptr<Logic> logic;
   std::vector<std::pair<LinkConfig, UnitConfig>> links;
-  std::optional<std::pair<LinkConfig, UnitConfig>> diag;
   ConfigYaml yaml;
+
+  std::string link_path;
+
+  std::string diag_name;
+  std::optional<std::pair<LinkConfig, UnitConfig>> diag_link;
 };
 
 struct LinkConfigData

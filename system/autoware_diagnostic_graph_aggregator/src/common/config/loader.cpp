@@ -76,14 +76,14 @@ void load_unit(UnitConfig & config)
   config->path = config->yaml.optional("path").text("");
 
   if (config->type == "link") {
-    config->link = config->yaml.required("link").text("");
+    config->link_path = config->yaml.required("link").text("");
   } else {
     config->logic = LogicFactory::Create(config->type, LogicConfig(config));
     for (auto & [link, unit] : config->links) {
       load_unit(unit);
     }
-    if (config->diag) {
-      load_diag(config->diag->second);
+    if (config->diag_link) {
+      load_diag(config->diag_link->second);
     }
   }
 }
@@ -93,7 +93,7 @@ void load_diag(UnitConfig & config)
   const auto diag_node = config->yaml.required("node").text();
   const auto diag_name = config->yaml.required("name").text();
   const auto sep = diag_node.empty() ? "" : ": ";
-  config->data = diag_node + sep + diag_name;
+  config->diag_name = diag_node + sep + diag_name;
 }
 
 std::vector<FileConfig> load_files(ParseContext context, ConfigYaml yaml, const Logger & logger)
@@ -163,10 +163,10 @@ UnitConfig resolve_links(
   if (unit->type != "link") {
     return unit;
   }
-  if (!links.count(unit->link)) {
-    throw LinkNotFound(unit->link);
+  if (!links.count(unit->link_path)) {
+    throw LinkNotFound(unit->link_path);
   }
-  return resolve_links(links.at(unit->link), links, visited);
+  return resolve_links(links.at(unit->link_path), links, visited);
 }
 
 void resolve_links(GraphConfig & graph)
@@ -246,8 +246,8 @@ void make_link_list(GraphConfig & graph)
     for (const auto & [link, child] : unit->links) {
       graph.links.push_back(link);
     }
-    if (unit->diag) {
-      graph.links.push_back(unit->diag->first);
+    if (unit->diag_link) {
+      graph.links.push_back(unit->diag_link->first);
     }
   }
 }
@@ -255,8 +255,8 @@ void make_link_list(GraphConfig & graph)
 void make_diag_list(GraphConfig & graph)
 {
   for (const auto & unit : graph.units) {
-    if (unit->diag) {
-      graph.diags.push_back(unit->diag->second);
+    if (unit->diag_link) {
+      graph.diags.push_back(unit->diag_link->second);
     }
   }
 }
