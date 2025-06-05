@@ -105,6 +105,17 @@ private:
   UnitLink * link_;
 };
 
+class WarnToErrorLogic : public Logic
+{
+public:
+  explicit WarnToErrorLogic(const LogicConfig & config);
+  std::string type() const override { return "warn-to-error"; }
+  DiagnosticLevel level() const override;
+
+private:
+  UnitLink * link_;
+};
+
 }  // namespace autoware::diagnostic_graph_aggregator
 
 #endif  // COMMON__LOGICS__AND_HPP_

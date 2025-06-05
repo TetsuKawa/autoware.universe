@@ -48,9 +48,10 @@ class GraphTest : public testing::TestWithParam<GraphTestParam>
 {
 };
 
-DiagnosticArray create_input(const std::vector<uint8_t> & levels)
+DiagnosticArray create_input(const rclcpp::Time & stamp, const std::vector<uint8_t> & levels)
 {
   DiagnosticArray array;
+  array.header.stamp = stamp;
   for (size_t i = 0; i < levels.size(); ++i) {
     DiagnosticStatus status;
     status.level = levels[i];
@@ -75,10 +76,11 @@ uint8_t get_output(const Graph & graph, const rclcpp::Time & stamp)
 
 TEST_P(GraphTest, Aggregation)
 {
-  const auto stamp = rclcpp::Clock().now();
+  const auto stamp = rclcpp::Clock(RCL_ROS_TIME).now();
   const auto param = GetParam();
   Graph graph(resource(param.config));
-  graph.update(stamp, create_input(param.inputs));
+  graph.update(stamp, create_input(stamp, param.inputs));
+  graph.update(stamp);
 
   const auto output = get_output(graph, stamp);
   EXPECT_EQ(output, param.result);
@@ -133,7 +135,7 @@ INSTANTIATE_TEST_SUITE_P(WarnToOk, GraphTest,
     GraphTestParam{"test2/warn-to-ok.yaml", {OK   }, OK   },
     GraphTestParam{"test2/warn-to-ok.yaml", {WARN }, OK},
     GraphTestParam{"test2/warn-to-ok.yaml", {ERROR}, ERROR},
-    GraphTestParam{"test2/warn-to-ok.yaml", {STALE}, STALE}
+    GraphTestParam{"test2/warn-to-ok.yaml", {STALE}, ERROR}
   )
 );
 
@@ -142,7 +144,7 @@ INSTANTIATE_TEST_SUITE_P(WarnToError, GraphTest,
     GraphTestParam{"test2/warn-to-error.yaml", {OK   }, OK   },
     GraphTestParam{"test2/warn-to-error.yaml", {WARN }, ERROR},
     GraphTestParam{"test2/warn-to-error.yaml", {ERROR}, ERROR},
-    GraphTestParam{"test2/warn-to-error.yaml", {STALE}, STALE}
+    GraphTestParam{"test2/warn-to-error.yaml", {STALE}, ERROR}
   )
 );
 

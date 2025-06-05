@@ -39,9 +39,9 @@ private:
 
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<DiagnosticArray>::SharedPtr sub_input_;
-  rclcpp::Publisher<DiagnosticArray>::SharedPtr pub_unknown_;
   rclcpp::Publisher<DiagGraphStruct>::SharedPtr pub_struct_;
   rclcpp::Publisher<DiagGraphStatus>::SharedPtr pub_status_;
+  rclcpp::Publisher<DiagnosticArray>::SharedPtr pub_unknown_;
   rclcpp::Service<ResetDiagGraph>::SharedPtr srv_reset_;
 
   void on_timer();

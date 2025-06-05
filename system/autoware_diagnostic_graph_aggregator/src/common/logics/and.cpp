@@ -115,6 +115,20 @@ DiagnosticLevel WarnToOkLogic::level() const
   }
 }
 
+WarnToErrorLogic::WarnToErrorLogic(const LogicConfig & config)
+{
+  link_ = config.parse_unit(config.yaml().required("item"));
+}
+
+DiagnosticLevel WarnToErrorLogic::level() const
+{
+  if (link_->level() == DiagnosticStatus::WARN) {
+    return DiagnosticStatus::ERROR;
+  } else {
+    return link_->level();
+  }
+}
+
 RegisterLogic<DiagLogic> registration4("diag");
 RegisterLogic<AndLogic> registration("and");
 RegisterLogic<OrLogic> registration3("or");
@@ -124,5 +138,6 @@ RegisterLogic<ConstWarnLogic> registration7("warn");
 RegisterLogic<ConstErrorLogic> registration8("error");
 RegisterLogic<AndLogic> registration5("short-circuit-and");
 RegisterLogic<WarnToOkLogic> registration9("warn-to-ok");
+RegisterLogic<WarnToErrorLogic> registration10("warn-to-error");
 
 }  // namespace autoware::diagnostic_graph_aggregator
