@@ -45,15 +45,8 @@ void FlagNode::on_timer()
   };
 
   const auto input = take_data();
-  if (!input) {
-    return;
-  }
-
-  const bool is_available = autonomous_mode_->isModeChangeAvailable(
-    input->kinematics, input->trajectory, input->trajectory_follower_control_cmd,
-    input->control_cmd);
-  const bool is_completed =
-    autonomous_mode_->isModeChangeCompleted(input->kinematics, input->trajectory);
+  const bool is_available = autonomous_mode_->isModeChangeAvailable(input);
+  const bool is_completed = autonomous_mode_->isModeChangeCompleted(input);
 
   const auto stamp = get_clock()->now();
   publish(pub_transition_available_, stamp, is_available);
@@ -64,33 +57,30 @@ void FlagNode::on_timer()
   pub_debug_->publish(debug);
 }
 
-std::optional<FlagNode::InputData> FlagNode::take_data()
+InputData FlagNode::take_data()
 {
+  InputData data;
+
   const auto kinematics = sub_kinematics_.take_data();
-  if (!kinematics) {
-    return std::nullopt;
+  if (kinematics) {
+    data.kinematics = *kinematics;
   }
 
   const auto trajectory = sub_trajectory_.take_data();
-  if (!trajectory) {
-    return std::nullopt;
+  if (trajectory) {
+    data.trajectory = *trajectory;
   }
 
   const auto control_cmd = sub_control_cmd_.take_data();
-  if (!control_cmd) {
-    return std::nullopt;
+  if (control_cmd) {
+    data.control_cmd = *control_cmd;
   }
 
   const auto trajectory_follower_control_cmd = sub_trajectory_follower_control_cmd_.take_data();
-  if (!trajectory_follower_control_cmd) {
-    return std::nullopt;
+  if (trajectory_follower_control_cmd) {
+    data.trajectory_follower_control_cmd = *trajectory_follower_control_cmd;
   }
 
-  InputData data;
-  data.kinematics = *kinematics;
-  data.trajectory = *trajectory;
-  data.control_cmd = *control_cmd;
-  data.trajectory_follower_control_cmd = *trajectory_follower_control_cmd;
   return data;
 }
 

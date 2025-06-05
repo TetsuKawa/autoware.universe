@@ -32,18 +32,10 @@ class FlagNode : public rclcpp::Node
 public:
   explicit FlagNode(const rclcpp::NodeOptions & options);
 
-  struct InputData
-  {
-    Odometry kinematics;
-    Trajectory trajectory;
-    Control control_cmd;
-    Control trajectory_follower_control_cmd;
-  };
-
 private:
   using ModeChangeAvailable = tier4_system_msgs::msg::ModeChangeAvailable;
   void on_timer();
-  std::optional<InputData> take_data();
+  InputData take_data();
 
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<ModeChangeAvailable>::SharedPtr pub_transition_available_;
