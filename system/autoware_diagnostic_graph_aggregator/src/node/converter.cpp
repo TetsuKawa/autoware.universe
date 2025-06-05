@@ -12,15 +12,14 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-#include "availability_converter.hpp"
+#include "converter.hpp"
 
 #include <unordered_map>
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
-AvailabilityConverter::AvailabilityConverter(const rclcpp::NodeOptions & options)
-: Node("availability_converter", options)
+ConverterNode::ConverterNode(const rclcpp::NodeOptions & options) : Node("converter", options)
 {
   // Get command mode id from parameter because they are depends on system configuration.
   stop_ = declare_parameter<uint16_t>("stop");
@@ -33,12 +32,12 @@ AvailabilityConverter::AvailabilityConverter(const rclcpp::NodeOptions & options
 
   sub_command_mode_ = create_subscription<CommandModeAvailability>(
     "~/command_mode/availability", 1,
-    std::bind(&AvailabilityConverter::on_availability, this, std::placeholders::_1));
+    std::bind(&ConverterNode::on_availability, this, std::placeholders::_1));
   pub_operation_mode_ =
     create_publisher<OperationModeAvailability>("~/operation_mode/availability", rclcpp::QoS(1));
 }
 
-void AvailabilityConverter::on_availability(const CommandModeAvailability & in)
+void ConverterNode::on_availability(const CommandModeAvailability & in)
 {
   std::unordered_map<uint16_t, bool> availability;
   for (const auto & item : in.items) {
@@ -64,4 +63,4 @@ void AvailabilityConverter::on_availability(const CommandModeAvailability & in)
 }  // namespace autoware::diagnostic_graph_aggregator
 
 #include <rclcpp_components/register_node_macro.hpp>
-RCLCPP_COMPONENTS_REGISTER_NODE(autoware::diagnostic_graph_aggregator::AvailabilityConverter)
+RCLCPP_COMPONENTS_REGISTER_NODE(autoware::diagnostic_graph_aggregator::ConverterNode)

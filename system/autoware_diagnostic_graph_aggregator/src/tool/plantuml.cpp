@@ -24,8 +24,7 @@ namespace autoware::diagnostic_graph_aggregator
 void dump_root(const std::string & path)
 {
   const auto color = "#EEEEEE";
-  Graph graph;
-  graph.create(path);
+  Graph graph(path);
 
   for (const auto & unit : graph.units()) {
     std::cout << "card " << unit << " " << color << " [" << std::endl;

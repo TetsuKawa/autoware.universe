@@ -12,218 +12,190 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "units.hpp"
+#include "graph/units.hpp"
 
-#include "config.hpp"
-#include "error.hpp"
-#include "loader.hpp"
+#include "config/entity.hpp"
+#include "graph/levels.hpp"
+#include "graph/logic.hpp"
 
-#include <algorithm>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+//
+#include <iostream>
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
-void UnitLink::initialize_object(BaseUnit * parent, BaseUnit * child)
+BaseUnit::BaseUnit(const std::vector<UnitLink *> parents, int index)
 {
-  parent_ = parent;
-  child_ = child;
+  parents_ = parents;
+  index_ = index;
 }
 
-void UnitLink::initialize_struct()
+int BaseUnit::index() const
 {
-  struct_.parent = parent_->index();
-  struct_.child = child_->index();
-  struct_.is_leaf = child_->is_leaf();
+  return index_;
 }
 
-void UnitLink::initialize_status()
+NodeUnit::NodeUnit(
+  const std::vector<UnitLink *> parents, const std::vector<UnitLink *> children, int index,
+  const UnitConfig & config)
+: BaseUnit(parents, index)
 {
-  // Do nothing.
-}
+  children_ = children;
+  logic_ = std::move(config->logic);
+  latch_ = std::make_unique<LatchLevel>(config->yaml);
 
-BaseUnit::BaseUnit(const UnitLoader & unit)
-{
-  index_ = unit.index();
-  parents_ = unit.parents();
-}
-
-bool BaseUnit::update()
-{
-  // Update the level of this unit.
-  update_status();
-
-  // If the level does not change, it will not affect the parents.
-  const auto curr_level = level();
-  if (curr_level == prev_level_) return false;
-  prev_level_ = curr_level;
-
-  // If the level changes, the parents also need to be updated.
-  bool result = false;
-  for (const auto & link : parents_) {
-    const auto unit = link->parent();
-    result = result || unit->update();
-  }
-  return result;
-}
-
-NodeUnit::NodeUnit(const UnitLoader & unit) : BaseUnit(unit)
-{
-  struct_.path = unit.path();
+  struct_.path = config->path;
+  struct_.type = logic_->type();
   status_.level = DiagnosticStatus::STALE;
 }
 
-void NodeUnit::initialize_struct()
+NodeUnit::~NodeUnit()
 {
-  struct_.type = type();
 }
 
-void NodeUnit::initialize_status()
+DiagNodeStruct NodeUnit::create_struct()
 {
-  if (child_links().size() == 0) update();
+  return struct_;
 }
 
-LeafUnit::LeafUnit(const UnitLoader & unit) : BaseUnit(unit)
+DiagNodeStatus NodeUnit::create_status()
 {
-  const auto diag_node = unit.data().required("node").text();
-  const auto diag_name = unit.data().required("name").text();
-  const auto sep = diag_node.empty() ? "" : ": ";
+  status_.level = latch_->level();
+  status_.input_level = latch_->input_level();
+  status_.latch_level = latch_->latch_level();
+  return status_;
+}
 
-  struct_.path = unit.path();
-  struct_.name = diag_node + sep + diag_name;
+void NodeUnit::reset()
+{
+  latch_->reset();
+}
+
+DiagnosticLevel NodeUnit::level() const
+{
+  return latch_->level();
+}
+
+std::string NodeUnit::path() const
+{
+  return struct_.path;
+}
+
+std::string NodeUnit::type() const
+{
+  return struct_.type;
+}
+
+void NodeUnit::update(const rclcpp::Time & stamp)
+{
+  latch_->update(stamp, logic_->level());
+}
+
+DiagUnit::DiagUnit(const std::vector<UnitLink *> parents, const UnitConfig & config)
+: BaseUnit(parents, -1)
+{
+  timeout_ = std::make_unique<TimeoutLevel>(config->yaml);
+  histeresis_ = std::make_unique<HysteresisLevel>(config->yaml);
+
+  struct_.name = config->data;
   status_.level = DiagnosticStatus::STALE;
 }
 
-void LeafUnit::initialize_struct()
+DiagUnit::~DiagUnit()
 {
-  struct_.type = type();
 }
 
-void LeafUnit::initialize_status()
+DiagLeafStruct DiagUnit::create_struct()
 {
-  if (child_links().size() == 0) update();
+  return struct_;
 }
 
-DiagUnit::DiagUnit(const UnitLoader & unit) : LeafUnit(unit)
+DiagLeafStatus DiagUnit::create_status()
 {
-  timeout_ = unit.data().optional("timeout").real(1.0);
+  status_.level = histeresis_->level();
+  status_.input_level = histeresis_->input_level();
+  return status_;
 }
 
-void DiagUnit::update_status()
+DiagnosticLevel DiagUnit::level() const
 {
-  // Do nothing. The level is updated by on_diag and on_time.
+  return histeresis_->level();
 }
 
-bool DiagUnit::on_diag(const rclcpp::Time & stamp, const DiagnosticStatus & status)
+std::string DiagUnit::name() const
 {
-  last_updated_time_ = stamp;
-  status_.level = status.level;
+  return struct_.name;
+}
+
+void DiagUnit::update(const rclcpp::Time & stamp)
+{
+  timeout_->update(stamp);
+  histeresis_->update(stamp, timeout_->level());
+}
+
+void DiagUnit::update(const rclcpp::Time & stamp, const DiagnosticStatus & status)
+{
+  timeout_->update(stamp, status.level);
+  histeresis_->update(stamp, timeout_->level());
+
   status_.message = status.message;
   status_.hardware_id = status.hardware_id;
   status_.values = status.values;
-  return update();
 }
 
-bool DiagUnit::on_time(const rclcpp::Time & stamp)
+// dump functions
+
+std::string str_level(DiagnosticLevel level)
 {
-  if (last_updated_time_) {
-    const auto updated = last_updated_time_.value();
-    const auto elapsed = (stamp - updated).seconds();
-    if (timeout_ < elapsed) {
-      last_updated_time_ = std::nullopt;
-      status_ = DiagLeafStatus();
-      status_.level = DiagnosticStatus::STALE;
-    }
+  // clang-format off
+  switch (level) {
+    case DiagnosticStatus::OK:    return "OK";
+    case DiagnosticStatus::WARN:  return "WARN";
+    case DiagnosticStatus::ERROR: return "ERROR";
+    case DiagnosticStatus::STALE: return "STALE";
+    default: return "-----";
   }
-  return update();
+  // clang-format on
 }
 
-MaxUnit::MaxUnit(const UnitLoader & unit) : NodeUnit(unit)
+template <typename T>
+void dump_data(const T & data, int width = 0)
 {
-  links_ = unit.children();
-}
-
-void MaxUnit::update_status()
-{
-  DiagnosticLevel level = DiagnosticStatus::OK;
-  for (const auto * const link : links_) {
-    level = std::max(level, link->child()->level());
+  std::cout << "| ";
+  if (width) {
+    std::cout << std::setw(width) << std::left;
   }
-  status_.level = std::min(level, DiagnosticStatus::ERROR);
+  std::cout << data;
+  std::cout << " ";
 }
 
-void ShortCircuitMaxUnit::update_status()
+void NodeUnit::dump() const
 {
-  // TODO(Takagi, Isamu): update link flags.
-  DiagnosticLevel level = DiagnosticStatus::OK;
-  for (const auto * const link : links_) {
-    level = std::max(level, link->child()->level());
-  }
-  status_.level = std::min(level, DiagnosticStatus::ERROR);
+  dump_data("Node");
+  dump_data(this);
+  dump_data(str_level(latch_->level()), 5);
+  dump_data(str_level(latch_->input_level()), 5);
+  dump_data(str_level(latch_->latch_level()), 5);
+  dump_data(type(), 5);
+  dump_data(path(), 50);
+  std::cout << "|" << std::endl;
 }
 
-MinUnit::MinUnit(const UnitLoader & unit) : NodeUnit(unit)
+void DiagUnit::dump() const
 {
-  links_ = unit.children();
-}
-
-void MinUnit::update_status()
-{
-  DiagnosticLevel level = DiagnosticStatus::OK;
-  if (!links_.empty()) {
-    level = DiagnosticStatus::STALE;
-    for (const auto * const link : links_) {
-      level = std::min(level, link->child()->level());
-    }
-  }
-  status_.level = std::min(level, DiagnosticStatus::ERROR);
-}
-
-RemapUnit::RemapUnit(const UnitLoader & unit) : NodeUnit(unit)
-{
-  link_ = unit.child();
-}
-
-void RemapUnit::update_status()
-{
-  const auto level = link_->child()->level();
-  status_.level = (level == level_from_) ? level_to_ : level;
-}
-
-WarnToOkUnit::WarnToOkUnit(const UnitLoader & unit) : RemapUnit(unit)
-{
-  level_from_ = DiagnosticStatus::WARN;
-  level_to_ = DiagnosticStatus::OK;
-}
-
-WarnToErrorUnit::WarnToErrorUnit(const UnitLoader & unit) : RemapUnit(unit)
-{
-  level_from_ = DiagnosticStatus::WARN;
-  level_to_ = DiagnosticStatus::ERROR;
-}
-
-void ConstUnit::update_status()
-{
-  // Do nothing. This unit always returns the same level.
-}
-
-OkUnit::OkUnit(const UnitLoader & unit) : ConstUnit(unit)
-{
-  status_.level = DiagnosticStatus::OK;
-}
-
-WarnUnit::WarnUnit(const UnitLoader & unit) : ConstUnit(unit)
-{
-  status_.level = DiagnosticStatus::WARN;
-}
-
-ErrorUnit::ErrorUnit(const UnitLoader & unit) : ConstUnit(unit)
-{
-  status_.level = DiagnosticStatus::ERROR;
-}
-
-StaleUnit::StaleUnit(const UnitLoader & unit) : ConstUnit(unit)
-{
-  status_.level = DiagnosticStatus::STALE;
+  dump_data("Diag");
+  dump_data(this);
+  dump_data(str_level(level()), 5);
+  dump_data(str_level(histeresis_->input_level()), 5);
+  dump_data(" --- ");
+  dump_data(" --- ");
+  dump_data(name(), 50);
+  std::cout << "|" << std::endl;
 }
 
 }  // namespace autoware::diagnostic_graph_aggregator

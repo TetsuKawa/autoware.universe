@@ -15,7 +15,7 @@
 #ifndef NODE__COMMAND_MODE_MAPPING_HPP_
 #define NODE__COMMAND_MODE_MAPPING_HPP_
 
-#include "graph/types.hpp"
+#include "types/forward.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 

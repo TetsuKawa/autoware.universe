@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "graph/error.hpp"
+#include "config/errors.hpp"
 #include "graph/graph.hpp"
 #include "utils.hpp"
+
+#include <rclcpp/clock.hpp>
 
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
@@ -60,8 +62,8 @@ DiagnosticArray create_input(const std::vector<uint8_t> & levels)
 
 uint8_t get_output(const Graph & graph, const rclcpp::Time & stamp)
 {
-  const auto struct_nodes = graph.create_struct(stamp).nodes;
-  const auto status_nodes = graph.create_status(stamp).nodes;
+  const auto struct_nodes = graph.create_struct_msg(stamp).nodes;
+  const auto status_nodes = graph.create_status_msg(stamp).nodes;
 
   for (size_t i = 0; i < struct_nodes.size(); ++i) {
     if (struct_nodes[i].path == "output") {
@@ -75,13 +77,8 @@ TEST_P(GraphTest, Aggregation)
 {
   const auto stamp = rclcpp::Clock().now();
   const auto param = GetParam();
-  Graph graph;
-  graph.create(resource(param.config));
-
-  const auto array = create_input(param.inputs);
-  for (const auto & status : array.status) {
-    graph.update(stamp, status);
-  }
+  Graph graph(resource(param.config));
+  graph.update(stamp, create_input(param.inputs));
 
   const auto output = get_output(graph, stamp);
   EXPECT_EQ(output, param.result);

@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TOOLS__CHECK_GRAPH_HPP_
-#define TOOLS__CHECK_GRAPH_HPP_
+#ifndef TOOL__CHECK_GRAPH_HPP_
+#define TOOL__CHECK_GRAPH_HPP_
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
 }  // namespace autoware::diagnostic_graph_aggregator
 
-#endif  // TOOLS__CHECK_GRAPH_HPP_
+#endif  // TOOL__CHECK_GRAPH_HPP_

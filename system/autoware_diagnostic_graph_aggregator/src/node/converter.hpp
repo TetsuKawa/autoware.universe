@@ -12,8 +12,8 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-#ifndef NODE__AVAILABILITY_CONVERTER_HPP_
-#define NODE__AVAILABILITY_CONVERTER_HPP_
+#ifndef NODE__CONVERTER_HPP_
+#define NODE__CONVERTER_HPP_
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -27,10 +27,10 @@ using tier4_system_msgs::msg::CommandModeAvailability;
 using tier4_system_msgs::msg::CommandModeAvailabilityItem;
 using tier4_system_msgs::msg::OperationModeAvailability;
 
-class AvailabilityConverter : public rclcpp::Node
+class ConverterNode : public rclcpp::Node
 {
 public:
-  explicit AvailabilityConverter(const rclcpp::NodeOptions & options);
+  explicit ConverterNode(const rclcpp::NodeOptions & options);
 
 private:
   rclcpp::Subscription<CommandModeAvailability>::SharedPtr sub_command_mode_;
@@ -49,4 +49,4 @@ private:
 
 }  // namespace autoware::diagnostic_graph_aggregator
 
-#endif  // NODE__AVAILABILITY_CONVERTER_HPP_
+#endif  // NODE__CONVERTER_HPP_

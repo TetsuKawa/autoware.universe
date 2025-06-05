@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "graph/error.hpp"
+#include "config/errors.hpp"
 #include "graph/graph.hpp"
 #include "utils.hpp"
 
@@ -22,60 +22,50 @@ using namespace autoware::diagnostic_graph_aggregator;  // NOLINT(build/namespac
 
 TEST(ConfigFile, RootNotFound)
 {
-  Graph graph;
-  EXPECT_THROW(graph.create(resource("test1/fake-file-name.yaml")), FileNotFound);
+  EXPECT_THROW(Graph(resource("test1/fake-file-name.yaml")), FileNotFound);
 }
 
 TEST(ConfigFile, FileNotFound)
 {
-  Graph graph;
-  EXPECT_THROW(graph.create(resource("test1/file-not-found.yaml")), FileNotFound);
+  EXPECT_THROW(Graph(resource("test1/file-not-found.yaml")), FileNotFound);
 }
 
 TEST(ConfigFile, UnknownSubstitution)
 {
-  Graph graph;
-  EXPECT_THROW(graph.create(resource("test1/unknown-substitution.yaml")), UnknownSubstitution);
+  EXPECT_THROW(Graph(resource("test1/unknown-substitution.yaml")), UnknownSubstitution);
 }
 
 TEST(ConfigFile, UnknownNodeType)
 {
-  Graph graph;
-  EXPECT_THROW(graph.create(resource("test1/unknown-unit-type.yaml")), UnknownUnitType);
+  EXPECT_THROW(Graph(resource("test1/unknown-unit-type.yaml")), UnknownLogic);
 }
 
 TEST(ConfigFile, InvalidDictType)
 {
-  Graph graph;
-  EXPECT_THROW(graph.create(resource("test1/invalid-dict-type.yaml")), InvalidType);
+  EXPECT_THROW(Graph(resource("test1/invalid-dict-type.yaml")), InvalidType);
 }
 
 TEST(ConfigFile, InvalidListType)
 {
-  Graph graph;
-  EXPECT_THROW(graph.create(resource("test1/invalid-list-type.yaml")), InvalidType);
+  EXPECT_THROW(Graph(resource("test1/invalid-list-type.yaml")), InvalidType);
 }
 
 TEST(ConfigFile, FieldNotFound)
 {
-  Graph graph;
-  EXPECT_THROW(graph.create(resource("test1/field-not-found.yaml")), FieldNotFound);
+  EXPECT_THROW(Graph(resource("test1/field-not-found.yaml")), FieldNotFound);
 }
 
 TEST(ConfigFile, PathConflict)
 {
-  Graph graph;
-  EXPECT_THROW(graph.create(resource("test1/path-conflict.yaml")), PathConflict);
+  EXPECT_THROW(Graph(resource("test1/path-conflict.yaml")), PathConflict);
 }
 
 TEST(ConfigFile, PathNotFound)
 {
-  Graph graph;
-  EXPECT_THROW(graph.create(resource("test1/path-not-found.yaml")), PathNotFound);
+  EXPECT_THROW(Graph(resource("test1/path-not-found.yaml")), LinkNotFound);
 }
 
 TEST(ConfigFile, GraphCirculation)
 {
-  Graph graph;
-  EXPECT_THROW(graph.create(resource("test1/graph-circulation.yaml")), GraphStructure);
+  EXPECT_THROW(Graph(resource("test1/graph-circulation.yaml")), UnitLoopFound);
 }

@@ -14,7 +14,6 @@
 
 #include "command_mode_mapping.hpp"
 
-#include "graph/error.hpp"
 #include "graph/graph.hpp"
 #include "graph/units.hpp"
 
@@ -47,7 +46,7 @@ CommandModeMapping::CommandModeMapping(rclcpp::Node & node, const Graph & graph)
     }
   }
 
-  pub_ = node.create_publisher<Availability>("/system/command_mode/availability", rclcpp::QoS(1));
+  pub_ = node.create_publisher<Availability>("~/availability", rclcpp::QoS(1));
 }
 
 void CommandModeMapping::update(const rclcpp::Time & stamp) const
