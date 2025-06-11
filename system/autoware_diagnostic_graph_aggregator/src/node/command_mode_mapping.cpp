@@ -29,7 +29,7 @@ namespace autoware::diagnostic_graph_aggregator
 CommandModeMapping::CommandModeMapping(rclcpp::Node & node, const Graph & graph)
 {
   std::unordered_map<std::string, BaseUnit *> path_to_unit;
-  for (const auto & unit : graph.units()) {
+  for (const auto & unit : graph.nodes()) {
     path_to_unit[unit->path()] = unit;
   }
 

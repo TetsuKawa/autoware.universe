@@ -16,6 +16,7 @@
 
 #include "config/entity.hpp"
 #include "graph/levels.hpp"
+#include "graph/links.hpp"
 #include "graph/logic.hpp"
 
 #include <memory>
@@ -29,28 +30,32 @@
 namespace autoware::diagnostic_graph_aggregator
 {
 
-BaseUnit::BaseUnit(const std::vector<UnitLink *> parents, int index)
+void BaseUnit::finalize(int index)
 {
-  parents_ = parents;
   index_ = index;
 }
 
-int BaseUnit::index() const
+std::vector<BaseUnit *> BaseUnit::children() const
 {
-  return index_;
+  std::vector<BaseUnit *> result;
+  for (const auto & port : ports()) {
+    for (const auto & unit : port->iterate()) {
+      result.push_back(unit);
+    }
+  }
+  return result;
 }
 
-NodeUnit::NodeUnit(
-  const std::vector<UnitLink *> parents, const std::vector<UnitLink *> children, int index,
-  const UnitConfig & config)
-: BaseUnit(parents, index)
+NodeUnit::NodeUnit(Parser & parser)
 {
-  children_ = children;
-  logic_ = std::move(config->logic);
-  latch_ = std::make_unique<LatchLevel>(config->yaml);
+  const auto dependency = parser.yaml().optional("dependent").text("");
+  dependency_ = dependency.empty() ? nullptr : parser.parse_link_node(dependency);
 
-  struct_.path = config->path;
-  struct_.type = logic_->type();
+  logic_ = LogicFactory::Create(parser);
+  latch_ = std::make_unique<LatchLevel>(parser.yaml());
+
+  struct_.path = parser.yaml().optional("path").text("");
+  struct_.type = parser.type();
   status_.level = DiagnosticStatus::STALE;
 }
 
@@ -68,7 +73,13 @@ DiagNodeStatus NodeUnit::create_status()
   status_.level = latch_->level();
   status_.input_level = latch_->input_level();
   status_.latch_level = latch_->latch_level();
+  status_.dependent = dependency();
   return status_;
+}
+
+bool NodeUnit::dependency() const
+{
+  return dependency_ && dependency_->level() != DiagnosticStatus::OK;
 }
 
 void NodeUnit::reset()
@@ -79,6 +90,11 @@ void NodeUnit::reset()
 DiagnosticLevel NodeUnit::level() const
 {
   return latch_->level();
+}
+
+std::vector<LinkPort *> NodeUnit::ports() const
+{
+  return logic_->ports();
 }
 
 std::string NodeUnit::path() const
@@ -96,13 +112,12 @@ void NodeUnit::update(const rclcpp::Time & stamp)
   latch_->update(stamp, logic_->level());
 }
 
-DiagUnit::DiagUnit(const std::vector<UnitLink *> parents, const UnitConfig & config)
-: BaseUnit(parents, -1)
+DiagUnit::DiagUnit(ConfigYaml yaml, const std::string & name)
 {
-  timeout_ = std::make_unique<TimeoutLevel>(config->yaml);
-  histeresis_ = std::make_unique<HysteresisLevel>(config->yaml);
+  timeout_ = std::make_unique<TimeoutLevel>(yaml);
+  histeresis_ = std::make_unique<HysteresisLevel>(yaml);
 
-  struct_.name = config->diag_name;
+  struct_.name = name;
   status_.level = DiagnosticStatus::STALE;
 }
 
@@ -148,6 +163,12 @@ void DiagUnit::update(const rclcpp::Time & stamp, const DiagnosticStatus & statu
   status_.values = status.values;
 }
 
+LinkUnit::LinkUnit(ConfigYaml yaml)
+{
+  path_ = yaml.optional("path").text("");
+  link_ = yaml.required("link").text("");
+}
+
 // dump functions
 
 std::string str_level(DiagnosticLevel level)
@@ -176,7 +197,7 @@ void dump_data(const T & data, int width = 0)
 
 void NodeUnit::dump() const
 {
-  dump_data("Node");
+  dump_data(index(), 4);
   dump_data(this);
   dump_data(str_level(latch_->level()), 5);
   dump_data(str_level(latch_->input_level()), 5);
@@ -188,7 +209,7 @@ void NodeUnit::dump() const
 
 void DiagUnit::dump() const
 {
-  dump_data("Diag");
+  dump_data(index(), 4);
   dump_data(this);
   dump_data(str_level(level()), 5);
   dump_data(str_level(histeresis_->input_level()), 5);

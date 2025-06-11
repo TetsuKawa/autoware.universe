@@ -22,14 +22,14 @@
 namespace autoware::diagnostic_graph_aggregator
 {
 
-struct ParseContext
+struct FileContext
 {
-  ParseContext(
+  FileContext(
     const std::string & parent, const std::shared_ptr<std::unordered_set<std::string>> & visited);
 
-  ParseContext child(const std::string & path);
+  FileContext child(const std::string & path) const;
 
-  bool visit(const std::string & path);
+  bool visit(const std::string & path) const;
 
   std::string file() const;
 

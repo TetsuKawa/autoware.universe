@@ -28,7 +28,7 @@
 namespace autoware::diagnostic_graph_aggregator::substitutions
 {
 
-std::string resolve(const std::string & substitution, const ParseContext & context)
+std::string resolve(const std::string & substitution, const FileContext & context)
 {
   std::stringstream ss(substitution);
   std::vector<std::string> words;
@@ -48,7 +48,7 @@ std::string resolve(const std::string & substitution, const ParseContext & conte
   throw UnknownSubstitution(substitution);
 }
 
-std::string evaluate(const std::string & text, const ParseContext & context)
+std::string evaluate(const std::string & text, const FileContext & context)
 {
   static const std::regex pattern(R"(\$\(([^()]*)\))");
   std::smatch m;

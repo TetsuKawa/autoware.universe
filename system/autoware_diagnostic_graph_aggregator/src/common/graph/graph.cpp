@@ -38,52 +38,15 @@ Graph::Graph(const std::string & path, const std::string & id, const Logger & lo
 {
   id_ = id;
 
-  {
-    const auto graph = load_config(path, logger);
-    std::unordered_map<LinkConfig, UnitConfig> parent_unit;
-    std::unordered_map<LinkConfig, UnitConfig> child_unit;
-    std::unordered_map<UnitConfig, std::vector<UnitLink *>> parent_links;
-    std::unordered_map<UnitConfig, std::vector<UnitLink *>> child_links;
-    std::unordered_map<UnitConfig, BaseUnit *> units;
-
-    for (const auto & parent : graph.units) {
-      for (const auto & [link, child] : parent->links) {
-        parent_unit[link] = parent;
-        child_unit[link] = child;
-        parent_links[child].push_back(link->link.get());
-        child_links[parent].push_back(link->link.get());
-      }
-      if (parent->diag_link) {
-        const auto & [link, child] = parent->diag_link.value();
-        parent_unit[link] = parent;
-        child_unit[link] = child;
-        parent_links[child].push_back(link->link.get());
-        child_links[parent].push_back(link->link.get());
-      }
-    }
-
-    for (const auto & node : graph.units) {
-      const auto parents = parent_links[node];  // Root units have no parents.
-      const auto children = child_links[node];  // Leaf units have no children.
-      nodes_.push_back(std::make_unique<NodeUnit>(parents, children, nodes_.size(), node));
-      units[node] = nodes_.back().get();
-    }
-    for (const auto & diag : graph.diags) {
-      const auto parents = parent_links.at(diag);
-      diags_.push_back(std::make_unique<DiagUnit>(parents, diag));
-      units[diag] = diags_.back().get();
-    }
-
-    for (const auto & link : graph.links) {
-      const auto parent = units.at(parent_unit.at(link));
-      const auto child = units.at(child_unit.at(link));
-      link->link->init(parent, child);
-      links_.push_back(std::move(link->link));
-    }
-  }
+  auto graph = ConfigLoader::Load(path, logger);
+  alloc_nodes_ = std::move(graph.nodes);
+  alloc_diags_ = std::move(graph.diags);
+  alloc_ports_ = std::move(graph.ports);
+  nodes_ = raws(alloc_nodes_);
+  diags_ = raws(alloc_diags_);
 
   for (const auto & diag : diags_) {
-    diag_dict_[diag->name()] = diag.get();
+    diag_dict_[diag->name()] = diag;
   }
 }
 
@@ -95,11 +58,15 @@ void Graph::dump() const
 {
   // NOLINTBEGIN(build/namespaces, whitespace/line_length)
   // clang-format off
+  std::cout << "|------------------------------------------------------------------------------------------------------------|" << std::endl;
   std::cout << "| Unit | Address        | Level | Input | Latch | Type  | Details                                            |" << std::endl;
   std::cout << "|------------------------------------------------------------------------------------------------------------|" << std::endl;
   for (const auto & node : nodes_) node->dump();
+  std::cout << "|------------------------------------------------------------------------------------------------------------|" << std::endl;
+  std::cout << "| Diag | Address        | Level | Input | Latch | Type  | Details                                            |" << std::endl;
+  std::cout << "|------------------------------------------------------------------------------------------------------------|" << std::endl;
   for (const auto & diag : diags_) diag->dump();
-  std::cout << "|============================================================================================================|" << std::endl;
+  std::cout << "|------------------------------------------------------------------------------------------------------------|" << std::endl;
   // clang-format on
   // NOLINTEND
 }
@@ -138,9 +105,13 @@ DiagGraphStruct Graph::create_struct_msg(const rclcpp::Time & stamp) const
   msg.id = id_;
   for (const auto & node : nodes_) msg.nodes.push_back(node->create_struct());
   for (const auto & diag : diags_) msg.diags.push_back(diag->create_struct());
-  for (const auto & link : links_) {
-    if (!link->is_diag()) {
-      msg.links.push_back(link->create_struct());
+
+  for (const auto & parent : nodes_) {
+    for (const auto & child : parent->children()) {
+      DiagLinkStruct link;
+      link.parent = parent->index();
+      link.child = child->index();
+      msg.links.push_back(link);
     }
   }
   return msg;
@@ -167,13 +138,6 @@ DiagnosticArray Graph::create_unknown_msg(const rclcpp::Time & stamp) const
 void Graph::reset()
 {
   for (const auto & node : nodes_) node->reset();
-}
-
-std::vector<NodeUnit *> Graph::units() const
-{
-  std::vector<NodeUnit *> units;
-  for (const auto & node : nodes_) units.push_back(node.get());
-  return units;
 }
 
 }  // namespace autoware::diagnostic_graph_aggregator

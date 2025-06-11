@@ -15,6 +15,7 @@
 #ifndef COMMON__GRAPH__UNITS_HPP_
 #define COMMON__GRAPH__UNITS_HPP_
 
+#include "config/yaml.hpp"
 #include "types/diags.hpp"
 #include "types/forward.hpp"
 
@@ -30,57 +31,32 @@ namespace autoware::diagnostic_graph_aggregator
 class BaseUnit
 {
 public:
-  BaseUnit(const std::vector<UnitLink *> parents, int index);
   virtual ~BaseUnit() = default;
   virtual DiagnosticLevel level() const = 0;
-  virtual bool is_diag() const = 0;
+  virtual std::vector<LinkPort *> ports() const = 0;
 
-  int index() const;
+  void finalize(int index);
+  int index() const { return index_; }
+  std::vector<BaseUnit *> children() const;
 
 private:
-  std::vector<UnitLink *> parents_;
   int index_;
-};
-
-class NodeUnit : public BaseUnit
-{
-public:
-  NodeUnit(
-    const std::vector<UnitLink *> parents, const std::vector<UnitLink *> children, int index,
-    const UnitConfig & config);
-  ~NodeUnit();
-  void reset();
-  void dump() const;
-  bool is_diag() const override { return false; }
-  DiagnosticLevel level() const override;
-  DiagNodeStruct create_struct();
-  DiagNodeStatus create_status();
-
-  std::string path() const;
-  std::string type() const;
-
-  void update(const rclcpp::Time & stamp);
-
-private:
-  DiagNodeStruct struct_;
-  DiagNodeStatus status_;
-  std::vector<UnitLink *> children_;
-  std::unique_ptr<Logic> logic_;
-  std::unique_ptr<LatchLevel> latch_;
 };
 
 class DiagUnit : public BaseUnit
 {
 public:
-  DiagUnit(const std::vector<UnitLink *> parents, const UnitConfig & config);
+  explicit DiagUnit(ConfigYaml yaml, const std::string & name);
   ~DiagUnit();
-  void dump() const;
-  bool is_diag() const override { return true; }
   DiagnosticLevel level() const override;
+  std::vector<LinkPort *> ports() const override { return {}; }
+
+  std::string name() const;
+
+  void dump() const;
   DiagLeafStruct create_struct();
   DiagLeafStatus create_status();
 
-  std::string name() const;
   void update(const rclcpp::Time & stamp);
   void update(const rclcpp::Time & stamp, const DiagnosticStatus & status);
 
@@ -89,6 +65,72 @@ private:
   DiagLeafStatus status_;
   std::unique_ptr<TimeoutLevel> timeout_;
   std::unique_ptr<HysteresisLevel> histeresis_;
+};
+
+class NodeUnit : public BaseUnit
+{
+public:
+  explicit NodeUnit(Parser & parser);
+  ~NodeUnit();
+  DiagnosticLevel level() const override;
+  std::vector<LinkPort *> ports() const override;
+
+  std::string path() const;
+  std::string type() const;
+
+  void dump() const;
+  DiagNodeStruct create_struct();
+  DiagNodeStatus create_status();
+
+  bool dependency() const;
+  void reset();
+  void update(const rclcpp::Time & stamp);
+
+private:
+  DiagNodeStruct struct_;
+  DiagNodeStatus status_;
+  std::unique_ptr<Logic> logic_;
+  std::unique_ptr<LatchLevel> latch_;
+  LinkItem * dependency_;
+};
+
+class TempUnit : public BaseUnit
+{
+public:
+  DiagnosticLevel level() const override { throw std::logic_error("TempUnit"); }
+  std::vector<LinkPort *> ports() const override { return {}; }
+};
+
+class TempNode : public TempUnit
+{
+public:
+  explicit TempNode(ConfigYaml yaml) { yaml_ = yaml; }
+  ConfigYaml yaml() const { return yaml_; }
+
+private:
+  ConfigYaml yaml_;
+};
+
+class TempDiag : public TempUnit
+{
+public:
+  explicit TempDiag(ConfigYaml yaml) { yaml_ = yaml; }
+  ConfigYaml yaml() const { return yaml_; }
+
+private:
+  ConfigYaml yaml_;
+};
+
+class LinkUnit : public TempUnit
+{
+public:
+  explicit LinkUnit(ConfigYaml yaml);
+  std::string path() const { return path_; }
+  std::string link() const { return link_; }
+
+private:
+  std::string path_;
+  std::string link_;
 };
 
 }  // namespace autoware::diagnostic_graph_aggregator

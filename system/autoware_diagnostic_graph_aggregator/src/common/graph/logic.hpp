@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace autoware::diagnostic_graph_aggregator
 {
@@ -31,14 +32,15 @@ class Logic
 public:
   virtual ~Logic() = default;
   virtual std::string type() const = 0;
+  virtual std::vector<LinkPort *> ports() const = 0;
   virtual DiagnosticLevel level() const = 0;
 };
 
 class LogicFactory
 {
 public:
-  using Function = std::function<std::unique_ptr<Logic>(const LogicConfig &)>;
-  static std::unique_ptr<Logic> Create(const std::string & type, const LogicConfig & config);
+  using Function = std::function<std::unique_ptr<Logic>(Parser & parser)>;
+  static std::unique_ptr<Logic> Create(Parser & parser);
   static void Register(const std::string & type, Function function);
 
 private:
@@ -51,8 +53,7 @@ class RegisterLogic
 public:
   explicit RegisterLogic(const std::string & type)
   {
-    LogicFactory::Register(
-      type, [](const LogicConfig & config) { return std::make_unique<T>(config); });
+    LogicFactory::Register(type, [](Parser & parser) { return std::make_unique<T>(parser); });
   }
 };
 

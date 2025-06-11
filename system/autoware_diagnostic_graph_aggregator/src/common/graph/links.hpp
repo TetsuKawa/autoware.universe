@@ -15,23 +15,39 @@
 #ifndef COMMON__GRAPH__LINKS_HPP_
 #define COMMON__GRAPH__LINKS_HPP_
 
+#include "config/yaml.hpp"
 #include "types/diags.hpp"
 #include "types/forward.hpp"
+
+#include <vector>
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
-class UnitLink
+class LinkPort
 {
 public:
-  void init(BaseUnit * parent, BaseUnit * child);
-  bool is_diag() const;
-  DiagnosticLevel level() const;
-  DiagLinkStruct create_struct();
+  virtual ~LinkPort() = default;
+  bool empty() const;
+  std::vector<BaseUnit *> iterate() const;
 
-private:
-  BaseUnit * parent_;
-  BaseUnit * child_;
+  // TODO(Takagi, Isamu): protected
+public:
+  std::vector<BaseUnit *> units_;
+};
+
+class LinkItem : public LinkPort
+{
+public:
+  explicit LinkItem(BaseUnit * unit);
+  DiagnosticLevel level() const;
+};
+
+class LinkList : public LinkPort
+{
+public:
+  explicit LinkList(const std::vector<BaseUnit *> & units);
+  std::vector<DiagnosticLevel> levels() const;
 };
 
 }  // namespace autoware::diagnostic_graph_aggregator

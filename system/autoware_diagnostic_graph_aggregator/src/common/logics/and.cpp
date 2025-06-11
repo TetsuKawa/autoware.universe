@@ -20,55 +20,65 @@
 
 #include <algorithm>
 #include <string>
+#include <vector>
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
-AndLogic::AndLogic(const LogicConfig & config)
+AndLogic::AndLogic(Parser & parser)
 {
-  ConfigYaml yaml = config.yaml();
-  for (ConfigYaml node : yaml.optional("list").list()) {
-    links_.push_back(config.parse_unit(node));
-  }
+  links_ = parser.parse_node_list(parser.yaml().optional("list").list());
+}
+
+std::vector<LinkPort *> AndLogic::ports() const
+{
+  return {links_};
 }
 
 DiagnosticLevel AndLogic::level() const
 {
-  if (links_.empty()) {
+  if (links_->empty()) {
     return DiagnosticStatus::OK;
   }
 
-  DiagnosticLevel level = DiagnosticStatus::OK;
-  for (const auto * const link : links_) {
-    level = std::max(level, link->level());
+  DiagnosticLevel result = DiagnosticStatus::OK;
+  for (const auto & level : links_->levels()) {
+    result = std::max(result, level);
   }
-  return level;
+  return result;
 }
 
-OrLogic::OrLogic(const LogicConfig & config)
+OrLogic::OrLogic(Parser & parser)
 {
-  ConfigYaml yaml = config.yaml();
-  for (ConfigYaml node : yaml.required("list").list()) {
-    links_.push_back(config.parse_unit(node));
-  }
+  links_ = parser.parse_node_list(parser.yaml().optional("list").list());
+}
+
+std::vector<LinkPort *> OrLogic::ports() const
+{
+  return {links_};
 }
 
 DiagnosticLevel OrLogic::level() const
 {
-  if (links_.empty()) {
+  if (links_->empty()) {
     return DiagnosticStatus::OK;
   }
 
-  DiagnosticLevel level = DiagnosticStatus::ERROR;
-  for (const auto * const link : links_) {
-    level = std::min(level, link->level());
+  DiagnosticLevel result = DiagnosticStatus::ERROR;
+  for (const auto & level : links_->levels()) {
+    result = std::min(result, level);
   }
-  return level;
+  return result;
 }
 
-DiagLogic::DiagLogic(const LogicConfig & config)
+DiagLogic::DiagLogic(Parser & parser)
 {
-  link_ = config.parse_diag(config.yaml());
+  link_ = parser.parse_diag_item(parser.yaml());
+}
+
+std::vector<LinkPort *> DiagLogic::ports() const
+{
+  return {link_};
 }
 
 DiagnosticLevel DiagLogic::level() const
@@ -77,7 +87,7 @@ DiagnosticLevel DiagLogic::level() const
   return std::min(link_->level(), DiagnosticStatus::ERROR);
 }
 
-ConstLogic::ConstLogic(const LogicConfig &)
+ConstLogic::ConstLogic(Parser &)
 {
 }
 
@@ -101,9 +111,14 @@ DiagnosticLevel ConstStaleLogic::level() const
   return DiagnosticStatus::STALE;
 }
 
-WarnToOkLogic::WarnToOkLogic(const LogicConfig & config)
+WarnToOkLogic::WarnToOkLogic(Parser & parser)
 {
-  link_ = config.parse_unit(config.yaml().required("item"));
+  link_ = parser.parse_node_item(parser.yaml().required("item"));
+}
+
+std::vector<LinkPort *> WarnToOkLogic::ports() const
+{
+  return {link_};
 }
 
 DiagnosticLevel WarnToOkLogic::level() const
@@ -115,9 +130,14 @@ DiagnosticLevel WarnToOkLogic::level() const
   }
 }
 
-WarnToErrorLogic::WarnToErrorLogic(const LogicConfig & config)
+WarnToErrorLogic::WarnToErrorLogic(Parser & parser)
 {
-  link_ = config.parse_unit(config.yaml().required("item"));
+  link_ = parser.parse_node_item(parser.yaml().required("item"));
+}
+
+std::vector<LinkPort *> WarnToErrorLogic::ports() const
+{
+  return {link_};
 }
 
 DiagnosticLevel WarnToErrorLogic::level() const

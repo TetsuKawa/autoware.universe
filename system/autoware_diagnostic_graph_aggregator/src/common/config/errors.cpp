@@ -19,4 +19,6 @@
 namespace autoware::diagnostic_graph_aggregator
 {
 
+// TODO(Takagi, Isamu): provide detailed information.
+
 }  // namespace autoware::diagnostic_graph_aggregator

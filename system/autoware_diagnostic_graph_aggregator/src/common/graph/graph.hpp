@@ -43,14 +43,16 @@ public:
   DiagnosticArray create_unknown_msg(const rclcpp::Time & stamp) const;
 
   void reset();
-  std::vector<NodeUnit *> units() const;
+  std::vector<NodeUnit *> nodes() const { return nodes_; }
+  std::vector<DiagUnit *> diags() const { return diags_; }
 
 private:
   std::string id_;
-  std::vector<std::unique_ptr<NodeUnit>> nodes_;
-  std::vector<std::unique_ptr<DiagUnit>> diags_;
-  std::vector<std::unique_ptr<UnitLink>> links_;
-
+  std::vector<std::unique_ptr<NodeUnit>> alloc_nodes_;
+  std::vector<std::unique_ptr<DiagUnit>> alloc_diags_;
+  std::vector<std::unique_ptr<LinkPort>> alloc_ports_;
+  std::vector<NodeUnit *> nodes_;
+  std::vector<DiagUnit *> diags_;
   std::unordered_map<std::string, DiagUnit *> diag_dict_;
   std::unordered_map<std::string, DiagnosticStatus> unknown_diags_;
 };

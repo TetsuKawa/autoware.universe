@@ -14,6 +14,7 @@
 
 #include "graph/logic.hpp"
 
+#include "config/entity.hpp"
 #include "config/errors.hpp"
 
 #include <memory>
@@ -22,13 +23,13 @@
 namespace autoware::diagnostic_graph_aggregator
 {
 
-std::unique_ptr<Logic> LogicFactory::Create(const std::string & type, const LogicConfig & config)
+std::unique_ptr<Logic> LogicFactory::Create(Parser & parser)
 {
-  const auto iter = logics_.find(type);
+  const auto iter = logics_.find(parser.type());
   if (iter != logics_.end()) {
-    return iter->second(config);
+    return iter->second(parser);
   }
-  throw UnknownLogic(type);
+  throw UnknownLogic(parser.type());
 }
 
 void LogicFactory::Register(const std::string & type, Function function)

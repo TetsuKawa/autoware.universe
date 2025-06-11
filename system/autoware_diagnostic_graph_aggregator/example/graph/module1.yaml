@@ -24,3 +24,7 @@ units:
     type: diag
     node: radar_driver_front
     name: status
+
+edits:
+  - type: remove
+    path: /sensing/lidars/front

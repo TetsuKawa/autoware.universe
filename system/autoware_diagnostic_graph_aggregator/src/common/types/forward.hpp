@@ -16,32 +16,34 @@
 #define COMMON__TYPES__FORWARD_HPP_
 
 #include <memory>
+#include <vector>
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
+struct GraphData;
+struct FileData;
+
 class ConfigYaml;
+class FileContext;
+class Parser;
+
 class Graph;
+class Logic;
+
 class BaseUnit;
 class NodeUnit;
 class DiagUnit;
-class UnitLink;
-class Logic;
-class LogicConfig;
+class LinkUnit;
+class TempUnit;
+
+class LinkPort;
+class LinkItem;
+class LinkList;
 
 class LatchLevel;
 class HysteresisLevel;
 class TimeoutLevel;
-
-struct ParseContext;
-struct GraphConfig;
-struct FileConfigData;
-struct UnitConfigData;
-struct LinkConfigData;
-
-using FileConfig = std::shared_ptr<FileConfigData>;
-using UnitConfig = std::shared_ptr<UnitConfigData>;
-using LinkConfig = std::shared_ptr<LinkConfigData>;
 
 }  // namespace autoware::diagnostic_graph_aggregator
 

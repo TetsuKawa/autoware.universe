@@ -17,6 +17,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   "src/common/graph/levels.cpp"
   "src/common/logics/and.cpp"
   "src/common/utils/logger.cpp"
+  "src/common/config/errors.cpp"
 )
 ament_auto_add_library(aggregator SHARED
   "src/node/aggregator.cpp"

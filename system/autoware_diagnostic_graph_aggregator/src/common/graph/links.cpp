@@ -15,35 +15,43 @@
 #include "graph/links.hpp"
 
 #include "graph/units.hpp"
+#include "utils/memory.hpp"
+
+#include <vector>
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
-void UnitLink::init(BaseUnit * parent, BaseUnit * child)
+bool LinkPort::empty() const
 {
-  if (parent_ || child_) {
-    throw std::logic_error("UnitLink: init function is called twice");
-  }
-  parent_ = parent;
-  child_ = child;
+  return units_.empty();
 }
 
-bool UnitLink::is_diag() const
+std::vector<BaseUnit *> LinkPort::iterate() const
 {
-  return child_->is_diag();
+  return units_;
 }
 
-DiagnosticLevel UnitLink::level() const
+LinkItem::LinkItem(BaseUnit * unit)
 {
-  return child_->level();
+  units_.push_back(unit);
 }
 
-DiagLinkStruct UnitLink::create_struct()
+DiagnosticLevel LinkItem::level() const
 {
-  DiagLinkStruct msg;
-  msg.parent = parent_->index();
-  msg.child = child_->index();
-  return msg;
+  return units_.front()->level();
+}
+
+LinkList::LinkList(const std::vector<BaseUnit *> & units)
+{
+  units_ = units;
+}
+
+std::vector<DiagnosticLevel> LinkList::levels() const
+{
+  std::vector<DiagnosticLevel> levels;
+  for (const auto & unit : units_) levels.push_back(unit->level());
+  return levels;
 }
 
 }  // namespace autoware::diagnostic_graph_aggregator

@@ -15,48 +15,73 @@
 #include "config/entity.hpp"
 
 #include "graph/links.hpp"
+#include "graph/units.hpp"
+
+//
 #include "graph/logic.hpp"
 
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
-UnitConfigData::UnitConfigData(ConfigYaml yaml) : yaml(yaml)
+Parser::Parser(const std::string & type, ConfigYaml yaml) : type_(type), yaml_(yaml)
 {
 }
 
-LinkConfigData::LinkConfigData()
+Parser::~Parser()
 {
-  link = std::make_unique<UnitLink>();
 }
 
-LogicConfig::LogicConfig(UnitConfig unit)
+LinkList * Parser::parse_node_list(const std::vector<ConfigYaml> & yamls)
 {
-  unit_ = unit;
+  std::vector<BaseUnit *> units;
+  for (const auto & yaml : yamls) {
+    units.push_back(temps_.emplace_back(std::make_unique<TempNode>(yaml)).get());
+  }
+  auto list = std::make_unique<LinkList>(units);
+  auto port = list.get();
+  ports_.push_back(std::move(list));
+  return port;
 }
 
-ConfigYaml LogicConfig::yaml() const
+LinkItem * Parser::parse_node_item(const ConfigYaml & yaml)
 {
-  return ConfigYaml(unit_->yaml);
+  auto unit = temps_.emplace_back(std::make_unique<TempNode>(yaml)).get();
+  auto item = std::make_unique<LinkItem>(unit);
+  auto port = item.get();
+  ports_.push_back(std::move(item));
+  return port;
 }
 
-UnitLink * LogicConfig::parse_unit(ConfigYaml yaml) const
+LinkItem * Parser::parse_diag_item(const ConfigYaml & yaml)
 {
-  const auto link = std::make_shared<LinkConfigData>();
-  const auto unit = std::make_shared<UnitConfigData>(yaml);
-  unit_->links.push_back(std::make_pair(link, unit));
-  return link->link.get();
+  auto unit = temps_.emplace_back(std::make_unique<TempDiag>(yaml)).get();
+  auto item = std::make_unique<LinkItem>(unit);
+  auto port = item.get();
+  ports_.push_back(std::move(item));
+  return port;
 }
 
-UnitLink * LogicConfig::parse_diag(ConfigYaml yaml) const
+std::vector<std::unique_ptr<TempUnit>> ParserWithAccess::take_temps()
 {
-  const auto link = std::make_shared<LinkConfigData>();
-  const auto diag = std::make_shared<UnitConfigData>(yaml);
-  unit_->diag_link = std::make_pair(link, diag);
-  return link->link.get();
+  return std::move(temps_);
+}
+
+std::vector<std::unique_ptr<LinkPort>> ParserWithAccess::take_ports()
+{
+  return std::move(ports_);
+}
+
+LinkItem * Parser::parse_link_node(const std::string & link)
+{
+  YAML::Node yaml;
+  yaml["type"] = "link";
+  yaml["link"] = link;
+  return parse_node_item(ConfigYaml(yaml));
 }
 
 }  // namespace autoware::diagnostic_graph_aggregator

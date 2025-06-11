@@ -22,7 +22,7 @@
 namespace autoware::diagnostic_graph_aggregator::substitutions
 {
 
-std::string evaluate(const std::string & text, const ParseContext & context);
+std::string evaluate(const std::string & text, const FileContext & context);
 
 }  // namespace autoware::diagnostic_graph_aggregator::substitutions
 

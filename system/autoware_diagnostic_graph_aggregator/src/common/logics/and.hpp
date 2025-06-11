@@ -26,40 +26,43 @@ namespace autoware::diagnostic_graph_aggregator
 class AndLogic : public Logic
 {
 public:
-  explicit AndLogic(const LogicConfig & config);
+  explicit AndLogic(Parser & parser);
   std::string type() const override { return "and"; }
+  std::vector<LinkPort *> ports() const override;
   DiagnosticLevel level() const override;
 
 private:
-  std::vector<UnitLink *> links_;
+  LinkList * links_;
 };
 
 class OrLogic : public Logic
 {
 public:
-  explicit OrLogic(const LogicConfig & config);
+  explicit OrLogic(Parser & parser);
   std::string type() const override { return "or"; }
+  std::vector<LinkPort *> ports() const override;
   DiagnosticLevel level() const override;
 
 private:
-  std::vector<UnitLink *> links_;
+  LinkList * links_;
 };
 
 class DiagLogic : public Logic
 {
 public:
-  explicit DiagLogic(const LogicConfig & config);
+  explicit DiagLogic(Parser & parser);
   std::string type() const override { return "diag"; }
+  std::vector<LinkPort *> ports() const override;
   DiagnosticLevel level() const override;
 
 private:
-  UnitLink * link_;
+  LinkItem * link_;
 };
 
 class ConstLogic : public Logic
 {
 public:
-  explicit ConstLogic(const LogicConfig & config);
+  explicit ConstLogic(Parser & parser);
 };
 
 class ConstOkLogic : public ConstLogic
@@ -67,6 +70,7 @@ class ConstOkLogic : public ConstLogic
 public:
   using ConstLogic::ConstLogic;
   std::string type() const override { return "ok"; }
+  std::vector<LinkPort *> ports() const override { return {}; }
   DiagnosticLevel level() const override;
 };
 
@@ -75,6 +79,7 @@ class ConstWarnLogic : public ConstLogic
 public:
   using ConstLogic::ConstLogic;
   std::string type() const override { return "warn"; }
+  std::vector<LinkPort *> ports() const override { return {}; }
   DiagnosticLevel level() const override;
 };
 
@@ -83,6 +88,7 @@ class ConstErrorLogic : public ConstLogic
 public:
   using ConstLogic::ConstLogic;
   std::string type() const override { return "error"; }
+  std::vector<LinkPort *> ports() const override { return {}; }
   DiagnosticLevel level() const override;
 };
 
@@ -91,29 +97,32 @@ class ConstStaleLogic : public ConstLogic
 public:
   using ConstLogic::ConstLogic;
   std::string type() const override { return "stale"; }
+  std::vector<LinkPort *> ports() const override { return {}; }
   DiagnosticLevel level() const override;
 };
 
 class WarnToOkLogic : public Logic
 {
 public:
-  explicit WarnToOkLogic(const LogicConfig & config);
+  explicit WarnToOkLogic(Parser & parser);
   std::string type() const override { return "warn-to-ok"; }
+  std::vector<LinkPort *> ports() const override;
   DiagnosticLevel level() const override;
 
 private:
-  UnitLink * link_;
+  LinkItem * link_;
 };
 
 class WarnToErrorLogic : public Logic
 {
 public:
-  explicit WarnToErrorLogic(const LogicConfig & config);
+  explicit WarnToErrorLogic(Parser & parser);
   std::string type() const override { return "warn-to-error"; }
+  std::vector<LinkPort *> ports() const override;
   DiagnosticLevel level() const override;
 
 private:
-  UnitLink * link_;
+  LinkItem * link_;
 };
 
 }  // namespace autoware::diagnostic_graph_aggregator

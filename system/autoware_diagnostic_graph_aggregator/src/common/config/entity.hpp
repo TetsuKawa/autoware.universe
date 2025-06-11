@@ -26,55 +26,48 @@
 namespace autoware::diagnostic_graph_aggregator
 {
 
-struct GraphConfig
+struct GraphData
 {
-  FileConfig root;
-  std::vector<FileConfig> files;
-  std::vector<UnitConfig> units;
-  std::vector<UnitConfig> diags;
-  std::vector<LinkConfig> links;
+  std::vector<std::unique_ptr<FileData>> files;
+  std::vector<std::unique_ptr<NodeUnit>> nodes;
+  std::vector<std::unique_ptr<DiagUnit>> diags;
+  std::vector<std::unique_ptr<LinkPort>> ports;
 };
 
-struct FileConfigData
+struct FileData
 {
   std::string original_path;
   std::string resolved_path;
-  std::vector<FileConfig> files;
-  std::vector<UnitConfig> units;
+  std::vector<FileData *> files;
+  std::vector<NodeUnit *> nodes;
   ConfigYaml yaml;
 };
 
-struct UnitConfigData
-{
-  explicit UnitConfigData(ConfigYaml yaml);
-  std::string type;
-  std::string path;
-  std::unique_ptr<Logic> logic;
-  std::vector<std::pair<LinkConfig, UnitConfig>> links;
-  ConfigYaml yaml;
-
-  std::string link_path;
-
-  std::string diag_name;
-  std::optional<std::pair<LinkConfig, UnitConfig>> diag_link;
-};
-
-struct LinkConfigData
-{
-  LinkConfigData();
-  std::unique_ptr<UnitLink> link;
-};
-
-class LogicConfig
+class Parser
 {
 public:
-  explicit LogicConfig(UnitConfig unit);
-  ConfigYaml yaml() const;
-  UnitLink * parse_unit(ConfigYaml yaml) const;
-  UnitLink * parse_diag(ConfigYaml yaml) const;
+  Parser(const std::string & type, ConfigYaml yaml);
+  ~Parser();
+  auto type() const { return type_; }
+  auto yaml() const { return yaml_; }
+  LinkList * parse_node_list(const std::vector<ConfigYaml> & yamls);
+  LinkItem * parse_node_item(const ConfigYaml & yaml);
+  LinkItem * parse_diag_item(const ConfigYaml & yaml);
+  LinkItem * parse_link_node(const std::string & link);
 
 protected:
-  UnitConfig unit_;
+  std::string type_;
+  ConfigYaml yaml_;
+  std::vector<std::unique_ptr<TempUnit>> temps_;
+  std::vector<std::unique_ptr<LinkPort>> ports_;
+};
+
+class ParserWithAccess : public Parser
+{
+public:
+  using Parser::Parser;
+  std::vector<std::unique_ptr<TempUnit>> take_temps();
+  std::vector<std::unique_ptr<LinkPort>> take_ports();
 };
 
 }  // namespace autoware::diagnostic_graph_aggregator

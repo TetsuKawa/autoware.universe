@@ -8,3 +8,7 @@ units:
     type: diag
     node: external_command_checker
     name: remote_command
+
+edits:
+  - type: remove
+    path: /sensing/radars/front

@@ -14,38 +14,73 @@
 
 #include "config/loader.hpp"
 
-#include "config/context.hpp"
 #include "config/entity.hpp"
 #include "config/errors.hpp"
 #include "config/substitutions.hpp"
-#include "config/yaml.hpp"
 #include "graph/links.hpp"
-#include "graph/logic.hpp"
-#include "types/forward.hpp"
+#include "graph/units.hpp"
 
 #include <deque>
 #include <filesystem>
 #include <memory>
+#include <queue>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
-//
-#include <iostream>
-
 namespace autoware::diagnostic_graph_aggregator
 {
 
-FileConfig load_file(ParseContext context, const std::string & path, const Logger & logger);
-UnitConfig load_unit(ConfigYaml yaml);
-void load_unit(UnitConfig & config);
-void load_diag(UnitConfig & config);
-std::vector<FileConfig> load_files(ParseContext context, ConfigYaml yaml, const Logger & logger);
-std::vector<UnitConfig> load_units(ConfigYaml yaml);
+ConfigLoader::ConfigLoader(const Logger & logger) : logger_(logger)
+{
+}
 
-FileConfig load_file(ParseContext context, const std::string & path, const Logger & logger)
+ConfigLoader::~ConfigLoader()
+{
+}
+
+GraphData ConfigLoader::Load(const std::string & path, const Logger & logger)
+{
+  ConfigLoader loader(logger);
+  loader.load(path);
+  return loader.take();
+}
+
+GraphData ConfigLoader::take()
+{
+  return GraphData{std::move(files_), std::move(nodes_), std::move(diags_), std::move(ports_)};
+}
+
+void ConfigLoader::load(const std::string & path)
+{
+  // Load functions.
+  logger_.info("Load step: load_file_tree");
+  load_file_tree(path);
+  logger_.info("Load step: make_node_units");
+  make_node_units();
+  logger_.info("Load step: make_diag_units");
+  make_diag_units();
+  logger_.info("Load step: resolve_links");
+  resolve_links();
+  logger_.info("Load step: topological_sort");
+  topological_sort();
+
+  // Edit functions.
+  logger_.info("Load step: apply_remove_edits");
+  apply_remove_edits();
+
+  // Finalize functions.
+  logger_.info("Load step: finalize");
+  finalize();
+  logger_.info("Load step: validate");
+  validate();
+  logger_.info("Load step: completed");
+}
+
+FileData * ConfigLoader::load_file(const FileContext & context, const std::string & path)
 {
   const auto resolved_path = substitutions::evaluate(path, context);
   if (!context.visit(resolved_path)) {
@@ -55,225 +90,326 @@ FileConfig load_file(ParseContext context, const std::string & path, const Logge
     throw FileNotFound(resolved_path);
   }
 
-  FileConfig result = std::make_shared<FileConfigData>();
+  const auto load_files = [this](const FileContext & context, ConfigYaml yaml) {
+    std::vector<FileData *> result;
+    for (ConfigYaml node : yaml.optional("files").list()) {
+      result.push_back(load_file(context, node.required("path").text()));
+    }
+    return result;
+  };
+
+  const auto result = files_.emplace_back(std::make_unique<FileData>()).get();
   result->original_path = path;
   result->resolved_path = resolved_path;
   result->yaml = ConfigYaml::LoadFile(result->resolved_path);
-  result->files = load_files(context.child(resolved_path), result->yaml, logger);
+  result->files = load_files(context.child(resolved_path), result->yaml);
   return result;
 }
 
-UnitConfig load_unit(ConfigYaml yaml)
+BaseUnit * ConfigLoader::load_unit(ConfigYaml yaml)
 {
-  UnitConfig result = std::make_shared<UnitConfigData>(yaml);
-  load_unit(result);
-  return result;
-}
-
-void load_unit(UnitConfig & config)
-{
-  config->type = config->yaml.required("type").text("");
-  config->path = config->yaml.optional("path").text("");
-
-  if (config->type == "link") {
-    config->link_path = config->yaml.required("link").text("");
-  } else {
-    config->logic = LogicFactory::Create(config->type, LogicConfig(config));
-    for (auto & [link, unit] : config->links) {
-      load_unit(unit);
+  try {
+    const auto type = yaml.required("type").text();
+    if (type == "link") {
+      return links_.emplace_back(std::make_unique<LinkUnit>(yaml)).get();
     }
-    if (config->diag_link) {
-      load_diag(config->diag_link->second);
-    }
+    ParserWithAccess parser(type, yaml);
+    const auto result = nodes_.emplace_back(std::make_unique<NodeUnit>(parser)).get();
+    for (auto & unit : parser.take_temps()) temps_.push_back(std::move(unit));
+    for (auto & port : parser.take_ports()) ports_.push_back(std::move(port));
+    return result;
+  } catch (const FieldNotFound & error) {
+    // TODO(Takagi, Isamu): notify error location.
+    throw error.location("unknown", yaml.str());
   }
 }
 
-void load_diag(UnitConfig & config)
+BaseUnit * ConfigLoader::load_diag(ConfigYaml yaml, const std::string & name)
 {
-  const auto diag_node = config->yaml.required("node").text();
-  const auto diag_name = config->yaml.required("name").text();
-  const auto sep = diag_node.empty() ? "" : ": ";
-  config->diag_name = diag_node + sep + diag_name;
+  return diags_.emplace_back(std::make_unique<DiagUnit>(yaml, name)).get();
 }
 
-std::vector<FileConfig> load_files(ParseContext context, ConfigYaml yaml, const Logger & logger)
-{
-  std::vector<FileConfig> result;
-  for (ConfigYaml file : yaml.optional("files").list()) {
-    result.push_back(load_file(context, file.required("path").text(), logger));
-  }
-  return result;
-}
-
-std::vector<UnitConfig> load_units(ConfigYaml yaml)
-{
-  std::vector<UnitConfig> result;
-  for (ConfigYaml unit : yaml.optional("units").list()) {
-    result.push_back(load_unit(unit));
-  }
-  return result;
-}
-
-void load_root_file(GraphConfig & graph, const std::string & path, const Logger & logger)
+void ConfigLoader::load_file_tree(const std::string & path)
 {
   const auto visited = std::make_shared<std::unordered_set<std::string>>();
-  graph.root = load_file(ParseContext("root", visited), path, logger);
+  root_file_ = load_file(FileContext("ROOT FILE", visited), path);
 }
 
-void make_file_list(GraphConfig & graph)
+void ConfigLoader::make_node_units()
 {
-  std::vector<FileConfig> result;
-  result.push_back(graph.root);
-  for (size_t i = 0; i < result.size(); ++i) {
-    const auto & files = result[i]->files;
-    result.insert(result.end(), files.begin(), files.end());
-  }
-  graph.files = result;
-}
-
-void load_unit_tree(GraphConfig & graph)
-{
-  for (auto & file : graph.files) {
-    file->units = load_units(file->yaml);
-  }
-}
-
-void make_unit_list(GraphConfig & graph)
-{
-  std::vector<UnitConfig> result;
-  for (const auto & file : graph.files) {
-    const auto & units = file->units;
-    result.insert(result.end(), units.begin(), units.end());
-  }
-  for (size_t i = 0; i < result.size(); ++i) {
-    for (const auto & [link, unit] : result[i]->links) {
-      result.push_back(unit);
+  for (const auto & file : files_) {
+    const auto yamls = file->yaml.optional("units").list();
+    for (ConfigYaml yaml : yamls) {
+      load_unit(yaml);
     }
   }
-  graph.units = result;
+
+  // The vector size increases dynamically by the load_unit function.
+  for (size_t i = 0; i < ports_.size(); ++i) {
+    const auto & port = ports_.at(i);
+    for (auto & unit : port->units_) {
+      const auto temp = dynamic_cast<TempNode *>(unit);
+      if (temp) {
+        unit = load_unit(temp->yaml());  // Replace temp unit link.
+      }
+    }
+  }
+
+  // Remove replaced units.
+  temps_ = release<TempNode>(std::move(temps_));
 }
 
-UnitConfig resolve_links(
-  UnitConfig unit, const std::unordered_map<std::string, UnitConfig> & links,
-  std::unordered_set<UnitConfig> & visited)
+void ConfigLoader::make_diag_units()
 {
-  if (!visited.insert(unit).second) {
-    throw LinkLoopFound(unit->path);
+  const auto take_diag_name = [](ConfigYaml yaml) {
+    const auto diag_node = yaml.required("node").text();
+    const auto diag_name = yaml.required("name").text();
+    const auto sep = diag_node.empty() ? "" : ": ";
+    return diag_node + sep + diag_name;
+  };
+
+  // The diag units with the same name will be merged.
+  std::unordered_map<std::string, BaseUnit *> diags;
+  for (const auto & port : ports_) {
+    for (auto & unit : port->units_) {
+      const auto temp = dynamic_cast<TempDiag *>(unit);
+      if (temp) {
+        const auto yaml = temp->yaml();
+        const auto name = take_diag_name(yaml);
+        if (!diags.count(name)) {
+          diags[name] = load_diag(yaml, name);
+        }
+        unit = diags.at(name);  // Replace temp unit link.
+      }
+    }
   }
-  if (unit->type != "link") {
+
+  // Remove replaced units.
+  temps_ = release<TempDiag>(std::move(temps_));
+}
+
+void ConfigLoader::resolve_links()
+{
+  // Create mapping from path to unit.
+  std::unordered_map<std::string, BaseUnit *> paths;
+  for (const auto & node : nodes_) {
+    const auto path = node->path();
+    if (!path.empty()) {
+      const auto [iter, success] = paths.insert(std::make_pair(path, node.get()));
+      if (!success) {
+        throw PathConflict(path);
+      }
+    }
+  }
+  for (const auto & link : links_) {
+    const auto path = link->path();
+    if (!path.empty()) {
+      const auto [iter, success] = paths.insert(std::make_pair(path, link.get()));
+      if (!success) {
+        throw PathConflict(path);
+      }
+    }
+  }
+
+  // Create mapping from link to unit.
+  std::unordered_map<LinkUnit *, BaseUnit *> links;
+  for (auto & link : raws(links_)) {
+    const auto target = link->link();
+    if (!paths.count(target)) {
+      throw LinkNotFound(target);
+    }
+    links[link] = paths.at(target);
+  }
+
+  // Resolve link units.
+  const auto resolve = [links](BaseUnit * unit) {
+    std::unordered_set<BaseUnit *> visited;
+    while (const auto link = dynamic_cast<LinkUnit *>(unit)) {
+      const auto [iter, success] = visited.insert(link);
+      if (!success) {
+        throw LinkLoopFound(link->path());
+      }
+      unit = links.at(link);
+    }
     return unit;
+  };
+  for (const auto & port : ports_) {
+    for (auto & unit : port->units_) {
+      unit = resolve(unit);  // Replace link unit link.
+    }
   }
-  if (!links.count(unit->link_path)) {
-    throw LinkNotFound(unit->link_path);
-  }
-  return resolve_links(links.at(unit->link_path), links, visited);
+
+  // Remove replaced link units.
+  links_.clear();
 }
 
-void resolve_links(GraphConfig & graph)
+void ConfigLoader::topological_sort()
 {
-  std::unordered_map<std::string, UnitConfig> links;
-  for (auto & unit : graph.units) {
-    if (!unit->path.empty()) {
-      if (!links.insert(std::make_pair(unit->path, unit)).second) {
-        throw PathConflict(unit->path);
+  std::deque<NodeUnit *> result;
+  {
+    std::unordered_map<NodeUnit *, int> degrees;
+    std::deque<NodeUnit *> buffer;
+
+    // Count degrees of each node.
+    for (const auto & node : raws(nodes_)) {
+      for (const auto & child : filter<NodeUnit>(node->children())) {
+        ++degrees[child];
       }
     }
-  }
-  for (auto & unit : graph.units) {
-    for (auto & [link, child] : unit->links) {
-      std::unordered_set<UnitConfig> visited;
-      child = resolve_links(child, links, visited);
-    }
-  }
-}
 
-void cleanup_files(GraphConfig & graph)
-{
-  std::vector<UnitConfig> units;
-  for (auto & unit : graph.units) {
-    if (unit->type != "link") {
-      units.push_back(unit);
-    }
-  }
-  graph.root.reset();
-  graph.files.clear();
-  graph.units = units;
-}
-
-void topological_sort(GraphConfig & graph)
-{
-  std::unordered_map<UnitConfig, int> degrees;
-  std::deque<UnitConfig> result;
-  std::deque<UnitConfig> buffer;
-
-  // Count degrees of each unit.
-  for (const auto & unit : graph.units) {
-    for (const auto & [link, child] : unit->links) {
-      ++degrees[child];
-    }
-  }
-
-  // Find initial units that are zero degrees.
-  for (const auto & unit : graph.units) {
-    // Do not use "at" function because the zero degree units are not set.
-    if (degrees[unit] == 0) {
-      buffer.push_back(unit);
-    }
-  }
-
-  // Sort by topological order.
-  while (!buffer.empty()) {
-    const auto unit = buffer.front();
-    buffer.pop_front();
-    for (const auto & [link, child] : unit->links) {
-      if (--degrees[child] == 0) {
-        buffer.push_back(child);
+    // Find initial nodes that are zero degrees.
+    // Do not use "at" function because the zero degree nodes are not set.
+    for (const auto & node : raws(nodes_)) {
+      if (degrees[node] == 0) {
+        buffer.push_back(node);
       }
     }
-    result.push_back(unit);
+
+    // Sort by topological order.
+    while (!buffer.empty()) {
+      const auto node = buffer.front();
+      buffer.pop_front();
+      for (const auto & child : filter<NodeUnit>(node->children())) {
+        if (--degrees[child] == 0) {
+          buffer.push_back(child);
+        }
+      }
+      result.push_back(node);
+    }
   }
 
-  // Detect circulation because the result does not include the units on the loop.
-  if (result.size() != graph.units.size()) {
+  // Detect circulation because the result does not include the nodes on the loop.
+  if (result.size() != nodes_.size()) {
     throw UnitLoopFound("detect unit loop");
   }
-  graph.units = std::vector<UnitConfig>(result.begin(), result.end());
+
+  // Update the nodes order by the topological sort result.
+  std::unordered_map<NodeUnit *, std::unique_ptr<NodeUnit>> mapping;
+  for (auto & node : nodes_) {
+    mapping[node.get()] = std::move(node);
+  }
+  std::vector<std::unique_ptr<NodeUnit>> nodes;
+  for (auto & node : result) {
+    nodes.push_back(std::move(mapping.at(node)));
+  }
+  nodes_ = std::move(nodes);
 }
 
-void make_link_list(GraphConfig & graph)
+void ConfigLoader::apply_remove_edits()
 {
-  for (const auto & unit : graph.units) {
-    for (const auto & [link, child] : unit->links) {
-      graph.links.push_back(link);
+  const auto list_edits = [this]() {
+    std::vector<ConfigYaml> result;
+    for (const auto & file : files_) {
+      const auto edits = file->yaml.optional("edits").list();
+      result.insert(result.end(), edits.begin(), edits.end());
     }
-    if (unit->diag_link) {
-      graph.links.push_back(unit->diag_link->first);
+    return result;
+  };
+
+  // List all node paths.
+  std::unordered_map<std::string, bool> remove_paths;
+  for (const auto & node : nodes_) {
+    const auto path = node->path();
+    if (!path.empty()) {
+      remove_paths[path] = false;
     }
   }
-}
 
-void make_diag_list(GraphConfig & graph)
-{
-  for (const auto & unit : graph.units) {
-    if (unit->diag_link) {
-      graph.diags.push_back(unit->diag_link->second);
+  // Mark target paths to be removed.
+  for (ConfigYaml yaml : list_edits()) {
+    const auto type = yaml.required("type").text();
+    if (type != "remove") continue;
+    const auto path = yaml.required("path").text();
+    if (!remove_paths.count(path)) {
+      throw PathNotFound(path);
+    }
+    remove_paths[path] = true;
+  }
+
+  // Mark target nodes to be removed.
+  std::unordered_set<BaseUnit *> remove_nodes;
+  for (auto & node : raws(nodes_)) {
+    const auto path = node->path();
+    if (!path.empty() && remove_paths.at(path)) {
+      remove_nodes.insert(node);
     }
   }
+
+  // Remove ports used by the target nodes.
+  {
+    std::unordered_set<LinkPort *> remove_ports;
+    for (const auto & node : remove_nodes) {
+      for (const auto & port : node->ports()) {
+        remove_ports.insert(port);
+      }
+    }
+    ports_ = filter(std::move(ports_), remove_ports);
+  }
+
+  // Remove links to the target nodes.
+  for (const auto & port : ports_) {
+    port->units_ = filter(port->units_, remove_nodes);
+  }
+
+  // Remove target nodes.
+  nodes_ = filter(std::move(nodes_), remove_nodes);
 }
 
-GraphConfig load_config(const std::string & path, const Logger & logger)
+void ConfigLoader::finalize()
 {
-  GraphConfig graph;
-  load_root_file(graph, path, logger);
-  make_file_list(graph);
-  load_unit_tree(graph);
-  make_unit_list(graph);
-  make_link_list(graph);
-  make_diag_list(graph);
-  resolve_links(graph);
-  cleanup_files(graph);
-  topological_sort(graph);
-  return graph;
+  int index = 0;
+  for (const auto & node : nodes_) node->finalize(index++);
+  for (const auto & diag : diags_) diag->finalize(index++);
+}
+
+void ConfigLoader::validate()
+{
+  std::unordered_set<BaseUnit *> units;
+  for (const auto & node : raws(nodes_)) units.insert(node);
+  for (const auto & diag : raws(diags_)) units.insert(diag);
+
+  int dead_links = 0;
+  for (const auto & port : ports_) {
+    for (const auto & unit : port->iterate()) {
+      if (!units.count(unit)) {
+        ++dead_links;
+      }
+    }
+  }
+
+  std::unordered_map<BaseUnit *, int> unit_used;
+  for (const auto & port : ports_) {
+    for (const auto & unit : port->iterate()) {
+      ++unit_used[unit];
+    }
+  }
+
+  std::unordered_map<LinkPort *, int> port_used;
+  for (const auto & node : nodes_) {
+    for (const auto & port : node->ports()) {
+      ++port_used[port];
+    }
+  }
+
+  std::ostringstream ss;
+  ss << "==================== validate ====================" << std::endl;
+  ss << "temps.size: " << temps_.size() << std::endl;
+  ss << "links.size: " << links_.size() << std::endl;
+  ss << "Dead links: " << dead_links << std::endl;
+  ss << "Unused diags: " << std::endl;
+  for (const auto & diag : raws(diags_)) {
+    if (unit_used.count(diag) == 0) {
+      ss << " - " << diag->name() << std::endl;
+    }
+  }
+  ss << "Unused ports: " << std::endl;
+  for (const auto & port : raws(ports_)) {
+    if (port_used.count(port) == 0) {
+      ss << " - " << port << std::endl;
+    }
+  }
+  ss << "===================================================" << std::endl;
+  logger_.info(ss.str());
 }
 
 }  // namespace autoware::diagnostic_graph_aggregator

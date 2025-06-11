@@ -17,18 +17,61 @@
 
 #include "types/forward.hpp"
 #include "utils/logger.hpp"
+#include "utils/memory.hpp"
+
+//
+#include "config/context.hpp"
+#include "config/yaml.hpp"
 
 #include <string>
+#include <vector>
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
-GraphConfig load_config(const std::string & path, const Logger & logger);
+class ConfigLoader
+{
+public:
+  explicit ConfigLoader(const Logger & logger);
+  ~ConfigLoader();
 
-void load_root_file(GraphConfig & graph, const std::string & path, const Logger & logger);
-void make_file_list(GraphConfig & graph);
-void load_unit_tree(GraphConfig & graph);
-void make_unit_list(GraphConfig & graph);
+  // Overall execution for normal use
+  void load(const std::string & path);
+  GraphData take();
+  static GraphData Load(const std::string & path, const Logger & logger);
+
+  // Step execution for debug tools.
+  void load_file_tree(const std::string & path);
+  void make_node_units();
+  void make_diag_units();
+  void resolve_links();
+  void topological_sort();
+
+  void apply_remove_edits();
+  void finalize();
+  void validate();
+
+  // Getters for debug tools.
+  FileData * root() const { return root_file_; }
+  std::vector<FileData *> files() const { return raws(files_); }
+  std::vector<NodeUnit *> nodes() const { return raws(nodes_); }
+  std::vector<DiagUnit *> diags() const { return raws(diags_); }
+  std::vector<LinkPort *> ports() const { return raws(ports_); }
+
+private:
+  FileData * load_file(const FileContext & context, const std::string & path);
+  BaseUnit * load_unit(ConfigYaml yaml);
+  BaseUnit * load_diag(ConfigYaml yaml, const std::string & name);
+
+  Logger logger_;
+  std::vector<std::unique_ptr<FileData>> files_;
+  std::vector<std::unique_ptr<TempUnit>> temps_;
+  std::vector<std::unique_ptr<LinkUnit>> links_;
+  std::vector<std::unique_ptr<NodeUnit>> nodes_;
+  std::vector<std::unique_ptr<DiagUnit>> diags_;
+  std::vector<std::unique_ptr<LinkPort>> ports_;
+  FileData * root_file_;
+};
 
 }  // namespace autoware::diagnostic_graph_aggregator
 

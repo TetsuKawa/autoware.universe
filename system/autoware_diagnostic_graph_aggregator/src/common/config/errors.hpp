@@ -51,6 +51,11 @@ struct PathConflict : public Exception
   using Exception::Exception;
 };
 
+struct PathNotFound : public Exception
+{
+  using Exception::Exception;
+};
+
 struct LinkNotFound : public Exception
 {
   using Exception::Exception;
