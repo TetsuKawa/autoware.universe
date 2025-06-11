@@ -90,61 +90,61 @@ TEST_P(GraphTest, Aggregation)
 
 INSTANTIATE_TEST_SUITE_P(And, GraphTest,
   testing::Values(
-    GraphTestParam{"test2/and.yaml", {OK,    OK   }, OK   },
-    GraphTestParam{"test2/and.yaml", {OK,    WARN }, WARN },
-    GraphTestParam{"test2/and.yaml", {OK,    ERROR}, ERROR},
-    GraphTestParam{"test2/and.yaml", {OK,    STALE}, ERROR},
-    GraphTestParam{"test2/and.yaml", {WARN,  OK   }, WARN },
-    GraphTestParam{"test2/and.yaml", {WARN,  WARN }, WARN },
-    GraphTestParam{"test2/and.yaml", {WARN,  ERROR}, ERROR},
-    GraphTestParam{"test2/and.yaml", {WARN,  STALE}, ERROR},
-    GraphTestParam{"test2/and.yaml", {ERROR, OK   }, ERROR},
-    GraphTestParam{"test2/and.yaml", {ERROR, WARN }, ERROR},
-    GraphTestParam{"test2/and.yaml", {ERROR, ERROR}, ERROR},
-    GraphTestParam{"test2/and.yaml", {ERROR, STALE}, ERROR},
-    GraphTestParam{"test2/and.yaml", {STALE, OK   }, ERROR},
-    GraphTestParam{"test2/and.yaml", {STALE, WARN }, ERROR},
-    GraphTestParam{"test2/and.yaml", {STALE, ERROR}, ERROR},
-    GraphTestParam{"test2/and.yaml", {STALE, STALE}, ERROR}
+    GraphTestParam{"logics/and.yaml", {OK,    OK   }, OK   },
+    GraphTestParam{"logics/and.yaml", {OK,    WARN }, WARN },
+    GraphTestParam{"logics/and.yaml", {OK,    ERROR}, ERROR},
+    GraphTestParam{"logics/and.yaml", {OK,    STALE}, ERROR},
+    GraphTestParam{"logics/and.yaml", {WARN,  OK   }, WARN },
+    GraphTestParam{"logics/and.yaml", {WARN,  WARN }, WARN },
+    GraphTestParam{"logics/and.yaml", {WARN,  ERROR}, ERROR},
+    GraphTestParam{"logics/and.yaml", {WARN,  STALE}, ERROR},
+    GraphTestParam{"logics/and.yaml", {ERROR, OK   }, ERROR},
+    GraphTestParam{"logics/and.yaml", {ERROR, WARN }, ERROR},
+    GraphTestParam{"logics/and.yaml", {ERROR, ERROR}, ERROR},
+    GraphTestParam{"logics/and.yaml", {ERROR, STALE}, ERROR},
+    GraphTestParam{"logics/and.yaml", {STALE, OK   }, ERROR},
+    GraphTestParam{"logics/and.yaml", {STALE, WARN }, ERROR},
+    GraphTestParam{"logics/and.yaml", {STALE, ERROR}, ERROR},
+    GraphTestParam{"logics/and.yaml", {STALE, STALE}, ERROR}
   )
 );
 
 INSTANTIATE_TEST_SUITE_P(Or, GraphTest,
   testing::Values(
-    GraphTestParam{"test2/or.yaml", {OK,    OK   }, OK   },
-    GraphTestParam{"test2/or.yaml", {OK,    WARN }, OK   },
-    GraphTestParam{"test2/or.yaml", {OK,    ERROR}, OK   },
-    GraphTestParam{"test2/or.yaml", {OK,    STALE}, OK   },
-    GraphTestParam{"test2/or.yaml", {WARN,  OK   }, OK   },
-    GraphTestParam{"test2/or.yaml", {WARN,  WARN }, WARN },
-    GraphTestParam{"test2/or.yaml", {WARN,  ERROR}, WARN },
-    GraphTestParam{"test2/or.yaml", {WARN,  STALE}, WARN },
-    GraphTestParam{"test2/or.yaml", {ERROR, OK   }, OK   },
-    GraphTestParam{"test2/or.yaml", {ERROR, WARN }, WARN },
-    GraphTestParam{"test2/or.yaml", {ERROR, ERROR}, ERROR},
-    GraphTestParam{"test2/or.yaml", {ERROR, STALE}, ERROR},
-    GraphTestParam{"test2/or.yaml", {STALE, OK   }, OK   },
-    GraphTestParam{"test2/or.yaml", {STALE, WARN }, WARN },
-    GraphTestParam{"test2/or.yaml", {STALE, ERROR}, ERROR},
-    GraphTestParam{"test2/or.yaml", {STALE, STALE}, ERROR}
+    GraphTestParam{"logics/or.yaml", {OK,    OK   }, OK   },
+    GraphTestParam{"logics/or.yaml", {OK,    WARN }, OK   },
+    GraphTestParam{"logics/or.yaml", {OK,    ERROR}, OK   },
+    GraphTestParam{"logics/or.yaml", {OK,    STALE}, OK   },
+    GraphTestParam{"logics/or.yaml", {WARN,  OK   }, OK   },
+    GraphTestParam{"logics/or.yaml", {WARN,  WARN }, WARN },
+    GraphTestParam{"logics/or.yaml", {WARN,  ERROR}, WARN },
+    GraphTestParam{"logics/or.yaml", {WARN,  STALE}, WARN },
+    GraphTestParam{"logics/or.yaml", {ERROR, OK   }, OK   },
+    GraphTestParam{"logics/or.yaml", {ERROR, WARN }, WARN },
+    GraphTestParam{"logics/or.yaml", {ERROR, ERROR}, ERROR},
+    GraphTestParam{"logics/or.yaml", {ERROR, STALE}, ERROR},
+    GraphTestParam{"logics/or.yaml", {STALE, OK   }, OK   },
+    GraphTestParam{"logics/or.yaml", {STALE, WARN }, WARN },
+    GraphTestParam{"logics/or.yaml", {STALE, ERROR}, ERROR},
+    GraphTestParam{"logics/or.yaml", {STALE, STALE}, ERROR}
   )
 );
 
 INSTANTIATE_TEST_SUITE_P(WarnToOk, GraphTest,
   testing::Values(
-    GraphTestParam{"test2/warn-to-ok.yaml", {OK   }, OK   },
-    GraphTestParam{"test2/warn-to-ok.yaml", {WARN }, OK},
-    GraphTestParam{"test2/warn-to-ok.yaml", {ERROR}, ERROR},
-    GraphTestParam{"test2/warn-to-ok.yaml", {STALE}, ERROR}
+    GraphTestParam{"logics/warn-to-ok.yaml", {OK   }, OK   },
+    GraphTestParam{"logics/warn-to-ok.yaml", {WARN }, OK},
+    GraphTestParam{"logics/warn-to-ok.yaml", {ERROR}, ERROR},
+    GraphTestParam{"logics/warn-to-ok.yaml", {STALE}, ERROR}
   )
 );
 
 INSTANTIATE_TEST_SUITE_P(WarnToError, GraphTest,
   testing::Values(
-    GraphTestParam{"test2/warn-to-error.yaml", {OK   }, OK   },
-    GraphTestParam{"test2/warn-to-error.yaml", {WARN }, ERROR},
-    GraphTestParam{"test2/warn-to-error.yaml", {ERROR}, ERROR},
-    GraphTestParam{"test2/warn-to-error.yaml", {STALE}, ERROR}
+    GraphTestParam{"logics/warn-to-error.yaml", {OK   }, OK   },
+    GraphTestParam{"logics/warn-to-error.yaml", {WARN }, ERROR},
+    GraphTestParam{"logics/warn-to-error.yaml", {ERROR}, ERROR},
+    GraphTestParam{"logics/warn-to-error.yaml", {STALE}, ERROR}
   )
 );
 

@@ -135,6 +135,12 @@ void check_graph(const std::string & path)
 
 int main(int argc, char ** argv)
 {
+  if (argc == 2) {
+    autoware::diagnostic_graph_aggregator::check_graph(argv[1]);
+    std::cout << "================================================" << std::endl;
+    return 0;
+  }
+
   std::vector<std::string> paths = {
     "$(find-pkg-share autoware_diagnostic_graph_aggregator)/example/graph/main.yaml",
     "$(find-pkg-share autoware_launch)/config/system/diagnostics/autoware-main.yaml",
@@ -142,10 +148,6 @@ int main(int argc, char ** argv)
 
   for (const auto & path : paths) {
     autoware::diagnostic_graph_aggregator::check_graph(path);
-    std::cout << "================================================" << std::endl;
-  }
-  if (argc == 2) {
-    autoware::diagnostic_graph_aggregator::check_graph(argv[1]);
     std::cout << "================================================" << std::endl;
   }
 }

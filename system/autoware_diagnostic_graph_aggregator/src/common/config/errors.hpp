@@ -26,12 +26,7 @@ struct Exception : public std::runtime_error
   using runtime_error::runtime_error;
 };
 
-struct UnknownSubstitution : public Exception
-{
-  using Exception::Exception;
-};
-
-struct UnknownLogic : public Exception
+struct FileNotFound : public Exception
 {
   using Exception::Exception;
 };
@@ -41,7 +36,22 @@ struct SameFileFound : public Exception
   using Exception::Exception;
 };
 
-struct FileNotFound : public Exception
+struct InvalidType : public Exception
+{
+  using Exception::Exception;
+};
+
+struct FieldNotFound : public Exception
+{
+  using Exception::Exception;
+};
+
+struct UnknownSubstitution : public Exception
+{
+  using Exception::Exception;
+};
+
+struct UnknownLogic : public Exception
 {
   using Exception::Exception;
 };
@@ -56,27 +66,12 @@ struct PathNotFound : public Exception
   using Exception::Exception;
 };
 
-struct LinkNotFound : public Exception
-{
-  using Exception::Exception;
-};
-
 struct LinkLoopFound : public Exception
 {
   using Exception::Exception;
 };
 
 struct UnitLoopFound : public Exception
-{
-  using Exception::Exception;
-};
-
-struct FieldNotFound : public Exception
-{
-  using Exception::Exception;
-};
-
-struct InvalidType : public Exception
 {
   using Exception::Exception;
 };

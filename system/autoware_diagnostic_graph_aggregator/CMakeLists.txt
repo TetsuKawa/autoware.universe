@@ -49,11 +49,11 @@ rclcpp_components_register_node(converter
 )
 
 if(BUILD_TESTING)
-  get_filename_component(RESOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/test/files ABSOLUTE)
+  get_filename_component(RESOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/test/files" ABSOLUTE)
   ament_auto_add_gtest(gtest_${PROJECT_NAME}
-    test/src/test1.cpp
-    test/src/test2.cpp
-    test/src/utils.cpp
+    "test/src/utils.cpp"
+    "test/src/graph_load.cpp"
+    "test/src/logics.cpp"
   )
   target_compile_definitions(gtest_${PROJECT_NAME} PRIVATE TEST_RESOURCE_PATH="${RESOURCE_PATH}")
   target_include_directories(gtest_${PROJECT_NAME} PRIVATE src/common)

@@ -47,7 +47,7 @@ ConfigYaml ConfigYaml::required(const std::string & name)
 {
   // TODO(Takagi, Isamu): check map type.
   if (!yaml_[name]) {
-    throw FieldNotFound(name, "unknown", "unknown");
+    throw FieldNotFound(name);
   }
   const auto node = yaml_[name];
   yaml_.remove(name);

@@ -31,6 +31,9 @@
 #include <utility>
 #include <vector>
 
+//
+#include <iostream>
+
 namespace autoware::diagnostic_graph_aggregator
 {
 
@@ -108,20 +111,15 @@ FileData * ConfigLoader::load_file(const FileContext & context, const std::strin
 
 BaseUnit * ConfigLoader::load_unit(ConfigYaml yaml)
 {
-  try {
-    const auto type = yaml.required("type").text();
-    if (type == "link") {
-      return links_.emplace_back(std::make_unique<LinkUnit>(yaml)).get();
-    }
-    ParserWithAccess parser(type, yaml);
-    const auto result = nodes_.emplace_back(std::make_unique<NodeUnit>(parser)).get();
-    for (auto & unit : parser.take_temps()) temps_.push_back(std::move(unit));
-    for (auto & port : parser.take_ports()) ports_.push_back(std::move(port));
-    return result;
-  } catch (const FieldNotFound & error) {
-    // TODO(Takagi, Isamu): notify error location.
-    throw error.location("unknown", yaml.str());
+  const auto type = yaml.required("type").text();
+  if (type == "link") {
+    return links_.emplace_back(std::make_unique<LinkUnit>(yaml)).get();
   }
+  ParserWithAccess parser(type, yaml);
+  const auto result = nodes_.emplace_back(std::make_unique<NodeUnit>(parser)).get();
+  for (auto & unit : parser.take_temps()) temps_.push_back(std::move(unit));
+  for (auto & port : parser.take_ports()) ports_.push_back(std::move(port));
+  return result;
 }
 
 BaseUnit * ConfigLoader::load_diag(ConfigYaml yaml, const std::string & name)
@@ -148,8 +146,7 @@ void ConfigLoader::make_node_units()
   for (size_t i = 0; i < ports_.size(); ++i) {
     const auto & port = ports_.at(i);
     for (auto & unit : port->units_) {
-      const auto temp = dynamic_cast<TempNode *>(unit);
-      if (temp) {
+      if (const auto temp = dynamic_cast<TempNode *>(unit)) {
         unit = load_unit(temp->yaml());  // Replace temp unit link.
       }
     }
@@ -172,8 +169,7 @@ void ConfigLoader::make_diag_units()
   std::unordered_map<std::string, BaseUnit *> diags;
   for (const auto & port : ports_) {
     for (auto & unit : port->units_) {
-      const auto temp = dynamic_cast<TempDiag *>(unit);
-      if (temp) {
+      if (const auto temp = dynamic_cast<TempDiag *>(unit)) {
         const auto yaml = temp->yaml();
         const auto name = take_diag_name(yaml);
         if (!diags.count(name)) {
@@ -216,26 +212,31 @@ void ConfigLoader::resolve_links()
   for (auto & link : raws(links_)) {
     const auto target = link->link();
     if (!paths.count(target)) {
-      throw LinkNotFound(target);
+      throw PathNotFound(target);
     }
     links[link] = paths.at(target);
   }
 
   // Resolve link units.
-  const auto resolve = [links](BaseUnit * unit) {
-    std::unordered_set<BaseUnit *> visited;
+  for (auto & start : raws(links_)) {
+    std::unordered_set<LinkUnit *> visited;
+    BaseUnit * unit = start;
     while (const auto link = dynamic_cast<LinkUnit *>(unit)) {
       const auto [iter, success] = visited.insert(link);
       if (!success) {
-        throw LinkLoopFound(link->path());
+        throw LinkLoopFound(link->link());
       }
       unit = links.at(link);
     }
-    return unit;
-  };
+    for (const auto & link : visited) {
+      links[link] = unit;
+    }
+  }
   for (const auto & port : ports_) {
     for (auto & unit : port->units_) {
-      unit = resolve(unit);  // Replace link unit link.
+      if (const auto link = dynamic_cast<LinkUnit *>(unit)) {
+        unit = links.at(link);  // Replace link unit link.
+      }
     }
   }
 

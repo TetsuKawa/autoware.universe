@@ -34,6 +34,7 @@ public:
   virtual ~BaseUnit() = default;
   virtual DiagnosticLevel level() const = 0;
   virtual std::vector<LinkPort *> ports() const = 0;
+  virtual std::string debug() const { return "NotImplemented"; }
 
   void finalize(int index);
   int index() const { return index_; }
@@ -50,13 +51,13 @@ public:
   ~DiagUnit();
   DiagnosticLevel level() const override;
   std::vector<LinkPort *> ports() const override { return {}; }
-
-  std::string name() const;
+  std::string debug() const override { return "DiagUnit"; }
 
   void dump() const;
   DiagLeafStruct create_struct();
   DiagLeafStatus create_status();
 
+  std::string name() const;
   void update(const rclcpp::Time & stamp);
   void update(const rclcpp::Time & stamp, const DiagnosticStatus & status);
 
@@ -74,14 +75,14 @@ public:
   ~NodeUnit();
   DiagnosticLevel level() const override;
   std::vector<LinkPort *> ports() const override;
-
-  std::string path() const;
-  std::string type() const;
+  std::string debug() const override { return "NodeUnit"; }
 
   void dump() const;
   DiagNodeStruct create_struct();
   DiagNodeStatus create_status();
 
+  std::string path() const;
+  std::string type() const;
   bool dependency() const;
   void reset();
   void update(const rclcpp::Time & stamp);
