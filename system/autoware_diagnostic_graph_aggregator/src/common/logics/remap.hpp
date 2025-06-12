@@ -12,44 +12,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "graph/units.hpp"
+#ifndef COMMON__LOGICS__REMAP_HPP_
+#define COMMON__LOGICS__REMAP_HPP_
 
-#include "config/entity.hpp"
-#include "graph/levels.hpp"
-#include "graph/links.hpp"
 #include "graph/logic.hpp"
 
-#include <memory>
 #include <string>
-#include <utility>
 #include <vector>
-
-//
-#include <iostream>
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
-void BaseUnit::finalize(int index)
+class RemapLogic : public Logic
 {
-  index_ = index;
-}
+public:
+  explicit RemapLogic(Parser & parser);
+  std::vector<LinkPort *> ports() const override;
 
-std::vector<BaseUnit *> BaseUnit::children() const
-{
-  std::vector<BaseUnit *> result;
-  for (const auto & port : ports()) {
-    for (const auto & unit : port->iterate()) {
-      result.push_back(unit);
-    }
-  }
-  return result;
-}
+protected:
+  LinkItem * link_;
+};
 
-LinkUnit::LinkUnit(ConfigYaml yaml)
+class WarnToOkLogic : public RemapLogic
 {
-  path_ = yaml.optional("path").text("");
-  link_ = yaml.required("link").text("");
-}
+public:
+  using RemapLogic::RemapLogic;
+  std::string type() const override { return "warn-to-ok"; }
+  DiagnosticLevel level() const override;
+};
+
+class WarnToErrorLogic : public RemapLogic
+{
+public:
+  using RemapLogic::RemapLogic;
+  std::string type() const override { return "warn-to-error"; }
+  DiagnosticLevel level() const override;
+};
 
 }  // namespace autoware::diagnostic_graph_aggregator
+
+#endif  // COMMON__LOGICS__REMAP_HPP_

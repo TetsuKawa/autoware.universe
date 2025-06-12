@@ -12,44 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "graph/units.hpp"
+#ifndef COMMON__LOGICS__DIAG_HPP_
+#define COMMON__LOGICS__DIAG_HPP_
 
-#include "config/entity.hpp"
-#include "graph/levels.hpp"
-#include "graph/links.hpp"
 #include "graph/logic.hpp"
 
-#include <memory>
 #include <string>
-#include <utility>
 #include <vector>
-
-//
-#include <iostream>
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
-void BaseUnit::finalize(int index)
+class DiagLogic : public Logic
 {
-  index_ = index;
-}
+public:
+  explicit DiagLogic(Parser & parser);
+  std::string type() const override { return "diag"; }
+  std::vector<LinkPort *> ports() const override;
+  DiagnosticLevel level() const override;
 
-std::vector<BaseUnit *> BaseUnit::children() const
-{
-  std::vector<BaseUnit *> result;
-  for (const auto & port : ports()) {
-    for (const auto & unit : port->iterate()) {
-      result.push_back(unit);
-    }
-  }
-  return result;
-}
-
-LinkUnit::LinkUnit(ConfigYaml yaml)
-{
-  path_ = yaml.optional("path").text("");
-  link_ = yaml.required("link").text("");
-}
+private:
+  LinkItem * link_;
+};
 
 }  // namespace autoware::diagnostic_graph_aggregator
+
+#endif  // COMMON__LOGICS__DIAG_HPP_

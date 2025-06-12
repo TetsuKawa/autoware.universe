@@ -12,44 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "graph/units.hpp"
+#include "logics/diag.hpp"
 
 #include "config/entity.hpp"
-#include "graph/levels.hpp"
 #include "graph/links.hpp"
-#include "graph/logic.hpp"
 
-#include <memory>
-#include <string>
-#include <utility>
+#include <algorithm>
 #include <vector>
-
-//
-#include <iostream>
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
-void BaseUnit::finalize(int index)
+DiagLogic::DiagLogic(Parser & parser)
 {
-  index_ = index;
+  link_ = parser.parse_diag_item(parser.yaml());
 }
 
-std::vector<BaseUnit *> BaseUnit::children() const
+std::vector<LinkPort *> DiagLogic::ports() const
 {
-  std::vector<BaseUnit *> result;
-  for (const auto & port : ports()) {
-    for (const auto & unit : port->iterate()) {
-      result.push_back(unit);
-    }
-  }
-  return result;
+  return {link_};
 }
 
-LinkUnit::LinkUnit(ConfigYaml yaml)
+DiagnosticLevel DiagLogic::level() const
 {
-  path_ = yaml.optional("path").text("");
-  link_ = yaml.required("link").text("");
+  // STALE to ERROR
+  return std::min(link_->level(), DiagnosticStatus::ERROR);
 }
 
 }  // namespace autoware::diagnostic_graph_aggregator
+
+namespace
+{
+
+namespace ns = autoware::diagnostic_graph_aggregator;
+ns::RegisterLogic<ns::DiagLogic> registration("diag");
+
+}  // namespace

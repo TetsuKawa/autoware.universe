@@ -17,7 +17,9 @@
 #include "config/entity.hpp"
 #include "config/errors.hpp"
 #include "config/substitutions.hpp"
+#include "graph/diags.hpp"
 #include "graph/links.hpp"
+#include "graph/nodes.hpp"
 #include "graph/units.hpp"
 
 #include <deque>

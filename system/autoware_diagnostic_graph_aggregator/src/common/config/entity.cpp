@@ -17,9 +17,6 @@
 #include "graph/links.hpp"
 #include "graph/units.hpp"
 
-//
-#include "graph/logic.hpp"
-
 #include <memory>
 #include <string>
 #include <utility>

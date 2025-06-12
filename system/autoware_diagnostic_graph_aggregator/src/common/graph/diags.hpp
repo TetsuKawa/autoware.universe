@@ -12,29 +12,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef COMMON__LOGICS__AND_HPP_
-#define COMMON__LOGICS__AND_HPP_
+#ifndef COMMON__GRAPH__DIAGS_HPP_
+#define COMMON__GRAPH__DIAGS_HPP_
 
-#include "graph/logic.hpp"
+#include "config/yaml.hpp"
+#include "graph/units.hpp"
+#include "types/diagnostics.hpp"
+#include "types/forward.hpp"
 
+#include <rclcpp/time.hpp>
+
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
-class AndLogic : public Logic
+class DiagUnit : public BaseUnit
 {
 public:
-  explicit AndLogic(Parser & parser);
-  std::string type() const override { return "and"; }
-  std::vector<LinkPort *> ports() const override;
+  explicit DiagUnit(ConfigYaml yaml, const std::string & name);
+  ~DiagUnit();
   DiagnosticLevel level() const override;
+  std::vector<LinkPort *> ports() const override { return {}; }
+  std::string debug() const override { return "DiagUnit"; }
+
+  DiagLeafStruct create_struct();
+  DiagLeafStatus create_status();
+
+  std::string name() const;
+  void update(const rclcpp::Time & stamp);
+  void update(const rclcpp::Time & stamp, const DiagnosticStatus & status);
 
 private:
-  LinkList * links_;
+  DiagLeafStruct struct_;
+  DiagLeafStatus status_;
+  std::unique_ptr<TimeoutLevel> timeout_;
 };
 
 }  // namespace autoware::diagnostic_graph_aggregator
 
-#endif  // COMMON__LOGICS__AND_HPP_
+#endif  // COMMON__GRAPH__DIAGS_HPP_

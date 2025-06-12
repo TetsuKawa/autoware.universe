@@ -15,7 +15,7 @@
 #include "command_mode_mapping.hpp"
 
 #include "graph/graph.hpp"
-#include "graph/units.hpp"
+#include "graph/nodes.hpp"
 
 #include <yaml-cpp/yaml.h>
 

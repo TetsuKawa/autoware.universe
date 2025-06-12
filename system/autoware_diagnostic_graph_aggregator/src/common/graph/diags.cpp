@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "graph/units.hpp"
+#include "graph/diags.hpp"
 
 #include "config/entity.hpp"
 #include "graph/levels.hpp"
@@ -24,32 +24,54 @@
 #include <utility>
 #include <vector>
 
-//
-#include <iostream>
-
 namespace autoware::diagnostic_graph_aggregator
 {
 
-void BaseUnit::finalize(int index)
+DiagUnit::DiagUnit(ConfigYaml yaml, const std::string & name)
 {
-  index_ = index;
+  timeout_ = std::make_unique<TimeoutLevel>(yaml);
+
+  struct_.name = name;
+  status_.level = DiagnosticStatus::STALE;
 }
 
-std::vector<BaseUnit *> BaseUnit::children() const
+DiagUnit::~DiagUnit()
 {
-  std::vector<BaseUnit *> result;
-  for (const auto & port : ports()) {
-    for (const auto & unit : port->iterate()) {
-      result.push_back(unit);
-    }
-  }
-  return result;
 }
 
-LinkUnit::LinkUnit(ConfigYaml yaml)
+DiagLeafStruct DiagUnit::create_struct()
 {
-  path_ = yaml.optional("path").text("");
-  link_ = yaml.required("link").text("");
+  return struct_;
+}
+
+DiagLeafStatus DiagUnit::create_status()
+{
+  status_.level = timeout_->level();
+  return status_;
+}
+
+DiagnosticLevel DiagUnit::level() const
+{
+  return timeout_->level();
+}
+
+std::string DiagUnit::name() const
+{
+  return struct_.name;
+}
+
+void DiagUnit::update(const rclcpp::Time & stamp)
+{
+  timeout_->update(stamp);
+}
+
+void DiagUnit::update(const rclcpp::Time & stamp, const DiagnosticStatus & status)
+{
+  timeout_->update(stamp, status.level);
+
+  status_.message = status.message;
+  status_.hardware_id = status.hardware_id;
+  status_.values = status.values;
 }
 
 }  // namespace autoware::diagnostic_graph_aggregator

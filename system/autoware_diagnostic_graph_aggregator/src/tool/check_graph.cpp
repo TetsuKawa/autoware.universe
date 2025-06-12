@@ -14,8 +14,9 @@
 
 #include "config/entity.hpp"
 #include "config/loader.hpp"
+#include "graph/diags.hpp"
 #include "graph/links.hpp"
-#include "graph/units.hpp"
+#include "graph/nodes.hpp"
 #include "utils/logger.hpp"
 
 #include <iomanip>

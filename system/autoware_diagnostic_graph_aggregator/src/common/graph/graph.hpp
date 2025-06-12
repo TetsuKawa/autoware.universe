@@ -35,7 +35,6 @@ public:
   explicit Graph(const std::string & path);
   Graph(const std::string & path, const std::string & id, const Logger & logger);
   ~Graph();
-  void dump() const;
   void update(const rclcpp::Time & stamp);
   bool update(const rclcpp::Time & stamp, const DiagnosticArray & array);
   DiagGraphStruct create_struct_msg(const rclcpp::Time & stamp) const;

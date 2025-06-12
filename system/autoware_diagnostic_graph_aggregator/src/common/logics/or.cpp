@@ -12,44 +12,46 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "graph/units.hpp"
+#include "logics/or.hpp"
 
 #include "config/entity.hpp"
-#include "graph/levels.hpp"
 #include "graph/links.hpp"
-#include "graph/logic.hpp"
 
-#include <memory>
-#include <string>
-#include <utility>
+#include <algorithm>
 #include <vector>
-
-//
-#include <iostream>
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
-void BaseUnit::finalize(int index)
+OrLogic::OrLogic(Parser & parser)
 {
-  index_ = index;
+  links_ = parser.parse_node_list(parser.yaml().optional("list").list());
 }
 
-std::vector<BaseUnit *> BaseUnit::children() const
+std::vector<LinkPort *> OrLogic::ports() const
 {
-  std::vector<BaseUnit *> result;
-  for (const auto & port : ports()) {
-    for (const auto & unit : port->iterate()) {
-      result.push_back(unit);
-    }
+  return {links_};
+}
+
+DiagnosticLevel OrLogic::level() const
+{
+  if (links_->empty()) {
+    return DiagnosticStatus::OK;
+  }
+
+  DiagnosticLevel result = DiagnosticStatus::ERROR;
+  for (const auto & level : links_->levels()) {
+    result = std::min(result, level);
   }
   return result;
 }
 
-LinkUnit::LinkUnit(ConfigYaml yaml)
-{
-  path_ = yaml.optional("path").text("");
-  link_ = yaml.required("link").text("");
-}
-
 }  // namespace autoware::diagnostic_graph_aggregator
+
+namespace
+{
+
+namespace ns = autoware::diagnostic_graph_aggregator;
+ns::RegisterLogic<ns::OrLogic> registration("or");
+
+}  // namespace

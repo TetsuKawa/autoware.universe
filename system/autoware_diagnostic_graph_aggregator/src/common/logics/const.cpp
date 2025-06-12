@@ -12,38 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "logics/and.hpp"
-
-#include "config/entity.hpp"
-#include "graph/links.hpp"
-
-#include <algorithm>
-#include <vector>
+#include "logics/const.hpp"
 
 namespace autoware::diagnostic_graph_aggregator
 {
 
-AndLogic::AndLogic(Parser & parser)
+ConstLogic::ConstLogic(Parser &)
 {
-  links_ = parser.parse_node_list(parser.yaml().optional("list").list());
 }
 
-std::vector<LinkPort *> AndLogic::ports() const
+DiagnosticLevel ConstOkLogic::level() const
 {
-  return {links_};
+  return DiagnosticStatus::OK;
 }
 
-DiagnosticLevel AndLogic::level() const
+DiagnosticLevel ConstWarnLogic::level() const
 {
-  if (links_->empty()) {
-    return DiagnosticStatus::OK;
-  }
+  return DiagnosticStatus::WARN;
+}
 
-  DiagnosticLevel result = DiagnosticStatus::OK;
-  for (const auto & level : links_->levels()) {
-    result = std::max(result, level);
-  }
-  return result;
+DiagnosticLevel ConstErrorLogic::level() const
+{
+  return DiagnosticStatus::ERROR;
+}
+
+DiagnosticLevel ConstStaleLogic::level() const
+{
+  return DiagnosticStatus::STALE;
 }
 
 }  // namespace autoware::diagnostic_graph_aggregator
@@ -52,7 +47,9 @@ namespace
 {
 
 namespace ns = autoware::diagnostic_graph_aggregator;
-ns::RegisterLogic<ns::AndLogic> registration1("and");
-ns::RegisterLogic<ns::AndLogic> registration2("short-circuit-and");
+ns::RegisterLogic<ns::ConstOkLogic> registration1("ok");
+ns::RegisterLogic<ns::ConstStaleLogic> registration2("stale");
+ns::RegisterLogic<ns::ConstWarnLogic> registration3("warn");
+ns::RegisterLogic<ns::ConstErrorLogic> registration4("error");
 
 }  // namespace

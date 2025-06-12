@@ -16,7 +16,9 @@
 
 #include "config/entity.hpp"
 #include "config/loader.hpp"
+#include "graph/diags.hpp"
 #include "graph/links.hpp"
+#include "graph/nodes.hpp"
 #include "graph/units.hpp"
 
 #include <string>
@@ -52,23 +54,6 @@ Graph::Graph(const std::string & path, const std::string & id, const Logger & lo
 
 Graph::~Graph()
 {
-}
-
-void Graph::dump() const
-{
-  // NOLINTBEGIN(build/namespaces, whitespace/line_length)
-  // clang-format off
-  std::cout << "|------------------------------------------------------------------------------------------------------------|" << std::endl;
-  std::cout << "| Unit | Address        | Level | Input | Latch | Type  | Details                                            |" << std::endl;
-  std::cout << "|------------------------------------------------------------------------------------------------------------|" << std::endl;
-  for (const auto & node : nodes_) node->dump();
-  std::cout << "|------------------------------------------------------------------------------------------------------------|" << std::endl;
-  std::cout << "| Diag | Address        | Level | Input | Latch | Type  | Details                                            |" << std::endl;
-  std::cout << "|------------------------------------------------------------------------------------------------------------|" << std::endl;
-  for (const auto & diag : diags_) diag->dump();
-  std::cout << "|------------------------------------------------------------------------------------------------------------|" << std::endl;
-  // clang-format on
-  // NOLINTEND
 }
 
 void Graph::update(const rclcpp::Time & stamp)

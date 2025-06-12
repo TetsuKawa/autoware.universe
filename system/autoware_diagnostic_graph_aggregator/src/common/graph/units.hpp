@@ -44,57 +44,6 @@ private:
   int index_;
 };
 
-class DiagUnit : public BaseUnit
-{
-public:
-  explicit DiagUnit(ConfigYaml yaml, const std::string & name);
-  ~DiagUnit();
-  DiagnosticLevel level() const override;
-  std::vector<LinkPort *> ports() const override { return {}; }
-  std::string debug() const override { return "DiagUnit"; }
-
-  void dump() const;
-  DiagLeafStruct create_struct();
-  DiagLeafStatus create_status();
-
-  std::string name() const;
-  void update(const rclcpp::Time & stamp);
-  void update(const rclcpp::Time & stamp, const DiagnosticStatus & status);
-
-private:
-  DiagLeafStruct struct_;
-  DiagLeafStatus status_;
-  std::unique_ptr<TimeoutLevel> timeout_;
-};
-
-class NodeUnit : public BaseUnit
-{
-public:
-  explicit NodeUnit(Parser & parser);
-  ~NodeUnit();
-  DiagnosticLevel level() const override;
-  std::vector<LinkPort *> ports() const override;
-  std::string debug() const override { return "NodeUnit"; }
-
-  void dump() const;
-  DiagNodeStruct create_struct();
-  DiagNodeStatus create_status();
-
-  std::string path() const;
-  std::string type() const;
-  bool dependency() const;
-  void reset();
-  void update(const rclcpp::Time & stamp);
-
-private:
-  DiagNodeStruct struct_;
-  DiagNodeStatus status_;
-  std::unique_ptr<Logic> logic_;
-  std::unique_ptr<LatchLevel> latch_;
-  std::unique_ptr<HysteresisLevel> histeresis_;
-  LinkItem * dependency_;
-};
-
 class TempUnit : public BaseUnit
 {
 public:
