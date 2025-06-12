@@ -17,6 +17,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace autoware::diagnostic_graph_aggregator
 {
@@ -27,6 +28,7 @@ public:
   TimelineTest();
   void execute(const std::string & path);
   void set_interval(double interval);
+  void set_reset(const std::unordered_set<size_t> & steps);
   void set(const std::string & name, const std::string & levels);
   std::string get(const std::string & path);
 
@@ -34,6 +36,7 @@ private:
   double interval_;
   std::unordered_map<std::string, std::string> input_;
   std::unordered_map<std::string, std::string> output_;
+  std::unordered_set<size_t> reset_steps_;
 };
 
 }  // namespace autoware::diagnostic_graph_aggregator

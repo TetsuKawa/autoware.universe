@@ -21,6 +21,8 @@
 #include <rclcpp/time.hpp>
 
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace autoware::diagnostic_graph_aggregator
@@ -88,12 +90,17 @@ void TimelineTest::execute(const std::string & path)
   // Create result sequence.
   const auto structure = graph.create_struct_msg(stamp);
   std::vector<std::string> result_sequence(structure.nodes.size());
-  for (const auto & diags : diagnostic_array_sequence) {
+  for (size_t step = 0; step < diagnostic_array_sequence.size(); ++step) {
     DiagnosticArray array;
     array.header.stamp = stamp;
-    array.status = diags;
+    array.status = diagnostic_array_sequence[step];
+
+    if (reset_steps_.count(step)) {
+      graph.reset();
+    }
     graph.update(stamp, array);
     graph.update(stamp);
+
     const auto msg = graph.create_status_msg(stamp);
     for (size_t i = 0; i < msg.nodes.size(); ++i) {
       result_sequence[i].push_back(level_to_letter(msg.nodes[i].level));
@@ -108,6 +115,11 @@ void TimelineTest::execute(const std::string & path)
 void TimelineTest::set_interval(double interval)
 {
   interval_ = interval;
+}
+
+void TimelineTest::set_reset(const std::unordered_set<size_t> & steps)
+{
+  reset_steps_ = steps;
 }
 
 void TimelineTest::set(const std::string & name, const std::string & levels)

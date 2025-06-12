@@ -1,28 +1,7 @@
 units:
   - type: diag
-    path: path1
+    path: path0
     node: dummy
     name: name0
-    hysteresis: 0.2
-    latch: 0.2
-
-  - type: diag
-    path: path2
-    node: dummy
-    name: name0
-    hysteresis: 0.4
-    latch: 0.2
-
-  - type: diag
-    path: path3
-    node: dummy
-    name: name0
-    hysteresis: 0.2
-    latch: 0.4
-
-  - type: diag
-    path: path4
-    node: dummy
-    name: name0
-    hysteresis: 0.4
-    latch: 0.4
+    hysteresis: 0.5
+    latch: 0.0

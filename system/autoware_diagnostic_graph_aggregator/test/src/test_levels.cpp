@@ -61,6 +61,70 @@ TEST(GraphLevel, Latch1)
   EXPECT_TRUE(match(test.get("path4"), result_0_4));
 }
 
+TEST(GraphLevel, Latch2)
+{
+  // clang-format off
+  const auto input  = "KKKKKEKKKKKKKKKKKKKK";
+  const auto result = "KKKKKEEEEEKKKKKKKKKK";
+  // clang-format on
+
+  autoware::diagnostic_graph_aggregator::TimelineTest test;
+  test.set_interval(0.1);
+  test.set_reset({10});
+  test.set("dummy: name0", input);
+  test.execute(resource("levels/latch.yaml"));
+
+  EXPECT_TRUE(match(test.get("path2"), result));
+}
+
+TEST(GraphLevel, Latch3)
+{
+  // clang-format off
+  const auto input  = "KKKKKEKKKKKKKKKKKKKK";
+  const auto result = "KKKKKEEEEEKKKKKKKKKK";
+  // clang-format on
+
+  autoware::diagnostic_graph_aggregator::TimelineTest test;
+  test.set_interval(0.1);
+  test.set_reset({10});
+  test.set("dummy: name0", input);
+  test.execute(resource("levels/latch.yaml"));
+
+  EXPECT_TRUE(match(test.get("path2"), result));
+}
+
+TEST(GraphLevel, Latch4)
+{
+  // clang-format off
+  const auto input  = "KKKKKEEEEEEEEEEEEEEE";
+  const auto result = "KKKKKEEEEEEEEEEEEEEE";
+  // clang-format on
+
+  autoware::diagnostic_graph_aggregator::TimelineTest test;
+  test.set_interval(0.1);
+  test.set_reset({10});
+  test.set("dummy: name0", input);
+  test.execute(resource("levels/latch.yaml"));
+
+  EXPECT_TRUE(match(test.get("path2"), result));
+}
+
+TEST(GraphLevel, Latch5)
+{
+  // clang-format off
+  const auto input  = "KKKKKEWWWWWWWWWKKKKK";
+  const auto result = "KKKKKEEEEEWWWWWWWWWW";
+  // clang-format on
+
+  autoware::diagnostic_graph_aggregator::TimelineTest test;
+  test.set_interval(0.1);
+  test.set_reset({10});
+  test.set("dummy: name0", input);
+  test.execute(resource("levels/latch.yaml"));
+
+  EXPECT_TRUE(match(test.get("path2"), result));
+}
+
 TEST(GraphLevel, Hysteresis1)
 {
   // clang-format off
@@ -139,4 +203,20 @@ TEST(GraphLevel, Hysteresis4)
   EXPECT_TRUE(match(test.get("path2"), result_0_0));
   EXPECT_TRUE(match(test.get("path3"), result_0_2));
   EXPECT_TRUE(match(test.get("path4"), result_0_4));
+}
+
+TEST(GraphLevel, Combination)
+{
+  // clang-format off
+  const auto input  = "KKKKKKKKKKKKKKKEEEEEEKKKKEKKKKEKKKK";
+  const auto result = "----------KKKKKKKKKKEEEEEEEEEEEEEEE";
+  // clang-format on
+
+  autoware::diagnostic_graph_aggregator::TimelineTest test;
+  test.set_interval(0.1);
+  test.set_reset({5, 23});
+  test.set("dummy: name0", input);
+  test.execute(resource("levels/combination.yaml"));
+
+  EXPECT_TRUE(match(test.get("path0"), result));
 }
