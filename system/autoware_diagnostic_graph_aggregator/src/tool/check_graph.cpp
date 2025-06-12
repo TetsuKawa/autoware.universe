@@ -125,8 +125,6 @@ void check_graph(const std::string & path)
 {
   auto loader = ConfigLoader(Logger());
   loader.load(path);
-  std::cout << "Graph loaded" << std::endl;
-
   dump_unit_list(loader);
   dump_port_list(loader.ports());
 }

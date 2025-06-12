@@ -27,16 +27,16 @@ ament_auto_add_library(converter SHARED
   "src/node/converter.cpp"
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE src/common)
-target_include_directories(aggregator PRIVATE src/common)
+target_include_directories(${PROJECT_NAME} PRIVATE "src/common")
+target_include_directories(aggregator PRIVATE "src/common")
 
 #ament_auto_add_executable(tree "src/tool/tree.cpp")
 #ament_auto_add_executable(plantuml "src/tool/plantuml.cpp")
 ament_auto_add_executable(check_graph "src/tool/check_graph.cpp")
 
-#target_include_directories(tree PRIVATE src/common)
-#target_include_directories(plantuml PRIVATE src/common)
-target_include_directories(check_graph PRIVATE src/common)
+#target_include_directories(tree PRIVATE "src/common")
+#target_include_directories(plantuml PRIVATE "src/common")
+target_include_directories(check_graph PRIVATE "src/common")
 
 rclcpp_components_register_node(aggregator
   PLUGIN "autoware::diagnostic_graph_aggregator::AggregatorNode"
@@ -51,16 +51,14 @@ rclcpp_components_register_node(converter
 if(BUILD_TESTING)
   get_filename_component(RESOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/test/files" ABSOLUTE)
   ament_auto_add_gtest(gtest_${PROJECT_NAME}
-    "test/src/graph_load.cpp"
-    "test/src/logics.cpp"
+    "test/src/test_graph_load.cpp"
+    "test/src/test_logics.cpp"
+    "test/src/test_levels.cpp"
     "test/src/tests/utils.cpp"
+    "test/src/tests/timeline.cpp"
   )
   target_compile_definitions(gtest_${PROJECT_NAME} PRIVATE TEST_RESOURCE_PATH="${RESOURCE_PATH}")
-  target_include_directories(gtest_${PROJECT_NAME} PRIVATE src/common)
-
-  ament_auto_add_executable(levels "test/src/levels.cpp" "test/src/tests/timeline.cpp" "test/src/tests/utils.cpp")
-  target_include_directories(levels PRIVATE src/common test/src)
-  target_compile_definitions(levels PRIVATE TEST_RESOURCE_PATH="${RESOURCE_PATH}")
+  target_include_directories(gtest_${PROJECT_NAME} PRIVATE "src/common")
 endif()
 
 ament_auto_package(INSTALL_TO_SHARE config example launch)

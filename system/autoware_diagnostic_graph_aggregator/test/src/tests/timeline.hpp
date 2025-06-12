@@ -21,12 +21,12 @@
 namespace autoware::diagnostic_graph_aggregator
 {
 
-class Timeline
+class TimelineTest
 {
 public:
-  Timeline();
-  void interval(double interval);
-  void execute();
+  TimelineTest();
+  void execute(const std::string & path);
+  void set_interval(double interval);
   void set(const std::string & name, const std::string & levels);
   std::string get(const std::string & path);
 

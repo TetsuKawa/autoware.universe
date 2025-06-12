@@ -15,7 +15,6 @@
 #include "timeline.hpp"
 
 #include "graph/graph.hpp"
-#include "tests/utils.hpp"
 #include "types/diagnostics.hpp"
 
 #include <rclcpp/clock.hpp>
@@ -24,23 +23,20 @@
 #include <string>
 #include <vector>
 
-// for debug
-#include <iostream>
-
 namespace autoware::diagnostic_graph_aggregator
 {
 
-Timeline::Timeline()
+TimelineTest::TimelineTest()
 {
   interval_ = 0.1;
 }
 
-void Timeline::execute()
+void TimelineTest::execute(const std::string & path)
 {
   // clang-format off
   const auto letter_to_level = [](const char letter) -> DiagnosticLevel {
     switch (letter) {
-      case 'O': return DiagnosticStatus::OK;
+      case 'K': return DiagnosticStatus::OK;
       case 'W': return DiagnosticStatus::WARN;
       case 'E': return DiagnosticStatus::ERROR;
       case 'S': return DiagnosticStatus::STALE;
@@ -51,7 +47,7 @@ void Timeline::execute()
   const auto level_to_letter = [](const DiagnosticLevel level) -> char {
     // clang-format off
     switch (level) {
-      case DiagnosticStatus::OK:    return 'O';
+      case DiagnosticStatus::OK:    return 'K';
       case DiagnosticStatus::WARN:  return 'W';
       case DiagnosticStatus::ERROR: return 'E';
       case DiagnosticStatus::STALE: return 'S';
@@ -86,14 +82,13 @@ void Timeline::execute()
 
   // Create graph.
   auto stamp = rclcpp::Clock(RCL_ROS_TIME).now();
-  auto graph = Graph(resource("levels/hysteresis.yaml"));
-  const auto structure = graph.create_struct_msg(stamp);
+  auto graph = Graph(path);
+  graph.reset();
 
   // Create result sequence.
+  const auto structure = graph.create_struct_msg(stamp);
   std::vector<std::string> result_sequence(structure.nodes.size());
   for (const auto & diags : diagnostic_array_sequence) {
-    std::cout << "--------------------------------" << std::endl;
-    std::cout << stamp.nanoseconds() << std::endl;
     DiagnosticArray array;
     array.header.stamp = stamp;
     array.status = diags;
@@ -101,30 +96,26 @@ void Timeline::execute()
     graph.update(stamp);
     const auto msg = graph.create_status_msg(stamp);
     for (size_t i = 0; i < msg.nodes.size(); ++i) {
-      result_sequence[i].push_back(level_to_letter(msg.nodes[i].input_level));
+      result_sequence[i].push_back(level_to_letter(msg.nodes[i].level));
     }
     stamp += rclcpp::Duration::from_seconds(interval_);
   }
   for (size_t i = 0; i < structure.nodes.size(); ++i) {
     output_[structure.nodes[i].path] = result_sequence[i];
   }
-
-  for (const auto & [path, levels] : output_) {
-    std::cout << path << " " << levels << std::endl;
-  }
 }
 
-void Timeline::interval(double interval)
+void TimelineTest::set_interval(double interval)
 {
   interval_ = interval;
 }
 
-void Timeline::set(const std::string & name, const std::string & levels)
+void TimelineTest::set(const std::string & name, const std::string & levels)
 {
   input_[name] = levels;
 }
 
-std::string Timeline::get(const std::string & path)
+std::string TimelineTest::get(const std::string & path)
 {
   return output_[path];
 }

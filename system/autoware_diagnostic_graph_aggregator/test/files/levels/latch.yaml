@@ -8,16 +8,16 @@ units:
     path: path2
     node: dummy
     name: name0
-    hysteresis: 0.0
+    latch: 0.0
 
   - type: diag
     path: path3
     node: dummy
     name: name0
-    hysteresis: 0.2
+    latch: 0.2
 
   - type: diag
     path: path4
     node: dummy
     name: name0
-    hysteresis: 0.4
+    latch: 0.4

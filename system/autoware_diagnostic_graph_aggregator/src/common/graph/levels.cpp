@@ -25,9 +25,7 @@ LatchLevel::LatchLevel(ConfigYaml yaml)
 {
   const auto latch = yaml.optional("latch");
   latch_enabled_ = latch.exists();
-  if (latch_enabled_) {
-    latch_duration_ = latch.float64();
-  }
+  latch_duration_ = latch_enabled_ ? latch.float64() : 0.0;
 
   warn_latched_ = false;
   error_latched_ = false;
@@ -130,9 +128,7 @@ HysteresisLevel::HysteresisLevel(ConfigYaml yaml)
 {
   const auto hysteresis = yaml.optional("hysteresis");
   hysteresis_enabled_ = hysteresis.exists();
-  if (hysteresis_enabled_) {
-    hysteresis_duration_ = hysteresis.float64();
-  }
+  hysteresis_duration_ = hysteresis_enabled_ ? hysteresis.float64() : 0.0;
 
   stable_level_ = DiagnosticStatus::STALE;
   input_level_ = DiagnosticStatus::STALE;
