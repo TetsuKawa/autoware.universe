@@ -16,7 +16,7 @@
 #define COMMON__GRAPH__UNITS_HPP_
 
 #include "config/yaml.hpp"
-#include "types/diags.hpp"
+#include "types/diagnostics.hpp"
 #include "types/forward.hpp"
 
 #include <rclcpp/time.hpp>
@@ -65,7 +65,6 @@ private:
   DiagLeafStruct struct_;
   DiagLeafStatus status_;
   std::unique_ptr<TimeoutLevel> timeout_;
-  std::unique_ptr<HysteresisLevel> histeresis_;
 };
 
 class NodeUnit : public BaseUnit
@@ -92,6 +91,7 @@ private:
   DiagNodeStatus status_;
   std::unique_ptr<Logic> logic_;
   std::unique_ptr<LatchLevel> latch_;
+  std::unique_ptr<HysteresisLevel> histeresis_;
   LinkItem * dependency_;
 };
 

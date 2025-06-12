@@ -1,0 +1,23 @@
+units:
+  - type: diag
+    path: path1
+    node: dummy
+    name: name0
+
+  - type: diag
+    path: path2
+    node: dummy
+    name: name0
+    hysteresis: 0.0
+
+  - type: diag
+    path: path3
+    node: dummy
+    name: name0
+    hysteresis: 0.5
+
+  - type: diag
+    path: path4
+    node: dummy
+    name: name0
+    hysteresis: 1.0

@@ -53,6 +53,7 @@ NodeUnit::NodeUnit(Parser & parser)
 
   logic_ = LogicFactory::Create(parser);
   latch_ = std::make_unique<LatchLevel>(parser.yaml());
+  histeresis_ = std::make_unique<HysteresisLevel>(parser.yaml());
 
   struct_.path = parser.yaml().optional("path").text("");
   struct_.type = parser.type();
@@ -109,13 +110,13 @@ std::string NodeUnit::type() const
 
 void NodeUnit::update(const rclcpp::Time & stamp)
 {
-  latch_->update(stamp, logic_->level());
+  histeresis_->update(stamp, logic_->level());
+  latch_->update(stamp, histeresis_->level());
 }
 
 DiagUnit::DiagUnit(ConfigYaml yaml, const std::string & name)
 {
   timeout_ = std::make_unique<TimeoutLevel>(yaml);
-  histeresis_ = std::make_unique<HysteresisLevel>(yaml);
 
   struct_.name = name;
   status_.level = DiagnosticStatus::STALE;
@@ -132,14 +133,13 @@ DiagLeafStruct DiagUnit::create_struct()
 
 DiagLeafStatus DiagUnit::create_status()
 {
-  status_.level = histeresis_->level();
-  status_.input_level = histeresis_->input_level();
+  status_.level = timeout_->level();
   return status_;
 }
 
 DiagnosticLevel DiagUnit::level() const
 {
-  return histeresis_->level();
+  return timeout_->level();
 }
 
 std::string DiagUnit::name() const
@@ -150,13 +150,11 @@ std::string DiagUnit::name() const
 void DiagUnit::update(const rclcpp::Time & stamp)
 {
   timeout_->update(stamp);
-  histeresis_->update(stamp, timeout_->level());
 }
 
 void DiagUnit::update(const rclcpp::Time & stamp, const DiagnosticStatus & status)
 {
   timeout_->update(stamp, status.level);
-  histeresis_->update(stamp, timeout_->level());
 
   status_.message = status.message;
   status_.hardware_id = status.hardware_id;
@@ -212,7 +210,7 @@ void DiagUnit::dump() const
   dump_data(index(), 4);
   dump_data(this);
   dump_data(str_level(level()), 5);
-  dump_data(str_level(histeresis_->input_level()), 5);
+  dump_data(" --- ");
   dump_data(" --- ");
   dump_data(" --- ");
   dump_data(name(), 50);

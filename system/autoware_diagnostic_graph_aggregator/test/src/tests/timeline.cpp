@@ -1,0 +1,132 @@
+// Copyright 2025 The Autoware Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "timeline.hpp"
+
+#include "graph/graph.hpp"
+#include "tests/utils.hpp"
+#include "types/diagnostics.hpp"
+
+#include <rclcpp/clock.hpp>
+#include <rclcpp/time.hpp>
+
+#include <string>
+#include <vector>
+
+// for debug
+#include <iostream>
+
+namespace autoware::diagnostic_graph_aggregator
+{
+
+Timeline::Timeline()
+{
+  interval_ = 0.1;
+}
+
+void Timeline::execute()
+{
+  // clang-format off
+  const auto letter_to_level = [](const char letter) -> DiagnosticLevel {
+    switch (letter) {
+      case 'O': return DiagnosticStatus::OK;
+      case 'W': return DiagnosticStatus::WARN;
+      case 'E': return DiagnosticStatus::ERROR;
+      case 'S': return DiagnosticStatus::STALE;
+    }
+    // clang-format on
+    throw std::runtime_error("Invalid level letter: " + std::to_string(letter));
+  };
+  const auto level_to_letter = [](const DiagnosticLevel level) -> char {
+    // clang-format off
+    switch (level) {
+      case DiagnosticStatus::OK:    return 'O';
+      case DiagnosticStatus::WARN:  return 'W';
+      case DiagnosticStatus::ERROR: return 'E';
+      case DiagnosticStatus::STALE: return 'S';
+    }
+    // clang-format on
+    return '?';
+  };
+
+  // Create input sequence of diagnostic status.
+  std::vector<std::vector<DiagnosticStatus>> diagnostic_array_sequence;
+  {
+    std::vector<std::unordered_map<std::string, DiagnosticLevel>> diagnostic_map_sequence;
+    for (const auto & [name, levels] : input_) {
+      if (diagnostic_map_sequence.size() < levels.size()) {
+        diagnostic_map_sequence.resize(levels.size());
+      }
+      for (size_t i = 0; i < levels.size(); ++i) {
+        diagnostic_map_sequence[i][name] = letter_to_level(levels[i]);
+      }
+    }
+    for (const auto & map : diagnostic_map_sequence) {
+      std::vector<DiagnosticStatus> array;
+      for (const auto & [name, level] : map) {
+        DiagnosticStatus status;
+        status.name = name;
+        status.level = level;
+        array.push_back(status);
+      }
+      diagnostic_array_sequence.push_back(array);
+    }
+  }
+
+  // Create graph.
+  auto stamp = rclcpp::Clock(RCL_ROS_TIME).now();
+  auto graph = Graph(resource("levels/hysteresis.yaml"));
+  const auto structure = graph.create_struct_msg(stamp);
+
+  // Create result sequence.
+  std::vector<std::string> result_sequence(structure.nodes.size());
+  for (const auto & diags : diagnostic_array_sequence) {
+    std::cout << "--------------------------------" << std::endl;
+    std::cout << stamp.nanoseconds() << std::endl;
+    DiagnosticArray array;
+    array.header.stamp = stamp;
+    array.status = diags;
+    graph.update(stamp, array);
+    graph.update(stamp);
+    const auto msg = graph.create_status_msg(stamp);
+    for (size_t i = 0; i < msg.nodes.size(); ++i) {
+      result_sequence[i].push_back(level_to_letter(msg.nodes[i].input_level));
+    }
+    stamp += rclcpp::Duration::from_seconds(interval_);
+  }
+  for (size_t i = 0; i < structure.nodes.size(); ++i) {
+    output_[structure.nodes[i].path] = result_sequence[i];
+  }
+
+  for (const auto & [path, levels] : output_) {
+    std::cout << path << " " << levels << std::endl;
+  }
+}
+
+void Timeline::interval(double interval)
+{
+  interval_ = interval;
+}
+
+void Timeline::set(const std::string & name, const std::string & levels)
+{
+  input_[name] = levels;
+}
+
+std::string Timeline::get(const std::string & path)
+{
+  return output_[path];
+}
+
+}  // namespace autoware::diagnostic_graph_aggregator

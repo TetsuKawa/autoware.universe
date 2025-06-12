@@ -16,7 +16,7 @@
 #define COMMON__GRAPH__LINKS_HPP_
 
 #include "config/yaml.hpp"
-#include "types/diags.hpp"
+#include "types/diagnostics.hpp"
 #include "types/forward.hpp"
 
 #include <vector>

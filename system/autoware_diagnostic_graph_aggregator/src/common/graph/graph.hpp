@@ -15,7 +15,7 @@
 #ifndef COMMON__GRAPH__GRAPH_HPP_
 #define COMMON__GRAPH__GRAPH_HPP_
 
-#include "types/diags.hpp"
+#include "types/diagnostics.hpp"
 #include "types/forward.hpp"
 #include "utils/logger.hpp"
 

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef COMMON__TYPES__DIAGS_HPP_
-#define COMMON__TYPES__DIAGS_HPP_
+#ifndef COMMON__TYPES__DIAGNOSTICS_HPP_
+#define COMMON__TYPES__DIAGNOSTICS_HPP_
 
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
@@ -39,4 +39,4 @@ using DiagLinkStatus = tier4_system_msgs::msg::DiagLinkStatus;
 using ResetDiagGraph = tier4_system_msgs::srv::ResetDiagGraph;
 }  // namespace autoware::diagnostic_graph_aggregator
 
-#endif  // COMMON__TYPES__DIAGS_HPP_
+#endif  // COMMON__TYPES__DIAGNOSTICS_HPP_

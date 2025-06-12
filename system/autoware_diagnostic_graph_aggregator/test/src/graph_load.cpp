@@ -14,7 +14,7 @@
 
 #include "config/errors.hpp"
 #include "graph/graph.hpp"
-#include "utils.hpp"
+#include "tests/utils.hpp"
 
 #include <gtest/gtest.h>
 

@@ -7,6 +7,7 @@ autoware_package()
 ament_auto_add_library(${PROJECT_NAME} SHARED
   "src/common/config/context.cpp"
   "src/common/config/entity.cpp"
+  "src/common/config/errors.cpp"
   "src/common/config/loader.cpp"
   "src/common/config/substitutions.cpp"
   "src/common/config/yaml.cpp"
@@ -17,7 +18,6 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   "src/common/graph/levels.cpp"
   "src/common/logics/and.cpp"
   "src/common/utils/logger.cpp"
-  "src/common/config/errors.cpp"
 )
 ament_auto_add_library(aggregator SHARED
   "src/node/aggregator.cpp"
@@ -51,12 +51,16 @@ rclcpp_components_register_node(converter
 if(BUILD_TESTING)
   get_filename_component(RESOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/test/files" ABSOLUTE)
   ament_auto_add_gtest(gtest_${PROJECT_NAME}
-    "test/src/utils.cpp"
     "test/src/graph_load.cpp"
     "test/src/logics.cpp"
+    "test/src/tests/utils.cpp"
   )
   target_compile_definitions(gtest_${PROJECT_NAME} PRIVATE TEST_RESOURCE_PATH="${RESOURCE_PATH}")
   target_include_directories(gtest_${PROJECT_NAME} PRIVATE src/common)
+
+  ament_auto_add_executable(levels "test/src/levels.cpp" "test/src/tests/timeline.cpp" "test/src/tests/utils.cpp")
+  target_include_directories(levels PRIVATE src/common test/src)
+  target_compile_definitions(levels PRIVATE TEST_RESOURCE_PATH="${RESOURCE_PATH}")
 endif()
 
 ament_auto_package(INSTALL_TO_SHARE config example launch)

@@ -15,7 +15,7 @@
 #ifndef COMMON__GRAPH__LEVELS_HPP_
 #define COMMON__GRAPH__LEVELS_HPP_
 
-#include "types/diags.hpp"
+#include "types/diagnostics.hpp"
 #include "types/forward.hpp"
 
 #include <rclcpp/time.hpp>
