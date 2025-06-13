@@ -20,8 +20,14 @@
 namespace autoware::diagnostic_graph_aggregator
 {
 
-void Logger::info(const std::string &)
+void StdLogger::info(const std::string & message)
 {
+  std::cout << message << std::endl;
+}
+
+void StdLogger::debug(const std::string & message)
+{
+  std::cout << message << std::endl;
 }
 
 }  // namespace autoware::diagnostic_graph_aggregator

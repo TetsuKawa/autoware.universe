@@ -14,7 +14,7 @@
 
 #include "config/substitutions.hpp"
 
-#include "config/context.hpp"
+#include "config/entity.hpp"
 #include "config/errors.hpp"
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
@@ -43,7 +43,7 @@ std::string resolve(const std::string & substitution, const FileContext & contex
     return ament_index_cpp::get_package_share_directory(words[1]);
   }
   if (words.size() == 1 && words[0] == "dirname") {
-    return std::filesystem::path(context.file()).parent_path();
+    return std::filesystem::path(context.file).parent_path();
   }
   throw UnknownSubstitution(substitution);
 }

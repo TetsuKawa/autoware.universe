@@ -19,10 +19,7 @@
 #include "utils/logger.hpp"
 #include "utils/memory.hpp"
 
-//
-#include "config/context.hpp"
-#include "config/yaml.hpp"
-
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -32,13 +29,13 @@ namespace autoware::diagnostic_graph_aggregator
 class ConfigLoader
 {
 public:
-  explicit ConfigLoader(const Logger & logger);
+  explicit ConfigLoader(std::shared_ptr<Logger> logger);
   ~ConfigLoader();
 
   // Overall execution for normal use
   void load(const std::string & path);
   GraphData take();
-  static GraphData Load(const std::string & path, const Logger & logger);
+  static GraphData Load(const std::string & path, std::shared_ptr<Logger> logger);
 
   // Step execution for debug tools.
   void load_file_tree(const std::string & path);
@@ -63,7 +60,7 @@ private:
   BaseUnit * load_unit(ConfigYaml yaml);
   BaseUnit * load_diag(ConfigYaml yaml, const std::string & name);
 
-  Logger logger_;
+  std::shared_ptr<Logger> logger_;
   std::vector<std::unique_ptr<FileData>> files_;
   std::vector<std::unique_ptr<TempUnit>> temps_;
   std::vector<std::unique_ptr<LinkUnit>> links_;

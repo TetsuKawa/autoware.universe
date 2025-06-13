@@ -30,7 +30,7 @@ AggregatorNode::AggregatorNode(const rclcpp::NodeOptions & options) : Node("aggr
     const auto graph_file = declare_parameter<std::string>("graph_file");
     std::ostringstream id;
     id << std::hex << stamp.nanoseconds();
-    graph_ = std::make_unique<Graph>(graph_file, id.str(), Logger());
+    graph_ = std::make_unique<Graph>(graph_file, id.str(), nullptr);
   }
 
   // Init plugins.

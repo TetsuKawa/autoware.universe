@@ -23,7 +23,23 @@ namespace autoware::diagnostic_graph_aggregator
 class Logger
 {
 public:
-  void info(const std::string & message);
+  virtual ~Logger() = default;
+  virtual void info(const std::string & message) = 0;
+  virtual void debug(const std::string & message) = 0;
+};
+
+class DummyLogger : public Logger
+{
+public:
+  void info(const std::string &) override {}
+  void debug(const std::string &) override {}
+};
+
+class StdLogger : public Logger
+{
+public:
+  void info(const std::string & message) override;
+  void debug(const std::string & message) override;
 };
 
 }  // namespace autoware::diagnostic_graph_aggregator

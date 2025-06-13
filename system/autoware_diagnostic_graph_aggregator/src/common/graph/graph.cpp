@@ -21,22 +21,20 @@
 #include "graph/nodes.hpp"
 #include "graph/units.hpp"
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-//
-#include <iostream>
-
 namespace autoware::diagnostic_graph_aggregator
 {
 
-Graph::Graph(const std::string & path) : Graph(path, "", Logger())
+Graph::Graph(const std::string & path) : Graph(path, "", nullptr)
 {
 }
 
-Graph::Graph(const std::string & path, const std::string & id, const Logger & logger)
+Graph::Graph(const std::string & path, const std::string & id, std::shared_ptr<Logger> logger)
 {
   id_ = id;
 

@@ -33,21 +33,19 @@
 #include <utility>
 #include <vector>
 
-//
-#include <iostream>
-
 namespace autoware::diagnostic_graph_aggregator
 {
 
-ConfigLoader::ConfigLoader(const Logger & logger) : logger_(logger)
+ConfigLoader::ConfigLoader(std::shared_ptr<Logger> logger)
 {
+  logger_ = logger ? logger : std::make_shared<DummyLogger>();
 }
 
 ConfigLoader::~ConfigLoader()
 {
 }
 
-GraphData ConfigLoader::Load(const std::string & path, const Logger & logger)
+GraphData ConfigLoader::Load(const std::string & path, std::shared_ptr<Logger> logger)
 {
   ConfigLoader loader(logger);
   loader.load(path);
@@ -62,33 +60,34 @@ GraphData ConfigLoader::take()
 void ConfigLoader::load(const std::string & path)
 {
   // Load functions.
-  logger_.info("Load step: load_file_tree");
+  logger_->info("Load step: load_file_tree");
   load_file_tree(path);
-  logger_.info("Load step: make_node_units");
+  logger_->info("Load step: make_node_units");
   make_node_units();
-  logger_.info("Load step: make_diag_units");
+  logger_->info("Load step: make_diag_units");
   make_diag_units();
-  logger_.info("Load step: resolve_links");
+  logger_->info("Load step: resolve_links");
   resolve_links();
-  logger_.info("Load step: topological_sort");
+  logger_->info("Load step: topological_sort");
   topological_sort();
 
   // Edit functions.
-  logger_.info("Load step: apply_remove_edits");
+  logger_->info("Load step: apply_remove_edits");
   apply_remove_edits();
 
   // Finalize functions.
-  logger_.info("Load step: finalize");
+  logger_->info("Load step: finalize");
   finalize();
-  logger_.info("Load step: validate");
+  logger_->info("Load step: validate");
   validate();
-  logger_.info("Load step: completed");
+  logger_->info("Load step: completed");
 }
 
 FileData * ConfigLoader::load_file(const FileContext & context, const std::string & path)
 {
   const auto resolved_path = substitutions::evaluate(path, context);
-  if (!context.visit(resolved_path)) {
+  const auto [iter, success] = context.visited->insert(resolved_path);
+  if (!success) {
     throw SameFileFound(resolved_path);
   }
   if (!std::filesystem::exists(resolved_path)) {
@@ -107,7 +106,7 @@ FileData * ConfigLoader::load_file(const FileContext & context, const std::strin
   result->original_path = path;
   result->resolved_path = resolved_path;
   result->yaml = ConfigYaml::LoadFile(result->resolved_path);
-  result->files = load_files(context.child(resolved_path), result->yaml);
+  result->files = load_files(FileContext{resolved_path, context.visited}, result->yaml);
   return result;
 }
 
@@ -132,7 +131,7 @@ BaseUnit * ConfigLoader::load_diag(ConfigYaml yaml, const std::string & name)
 void ConfigLoader::load_file_tree(const std::string & path)
 {
   const auto visited = std::make_shared<std::unordered_set<std::string>>();
-  root_file_ = load_file(FileContext("ROOT FILE", visited), path);
+  root_file_ = load_file(FileContext{"ROOT_FILE", visited}, path);
 }
 
 void ConfigLoader::make_node_units()
@@ -419,7 +418,7 @@ void ConfigLoader::validate()
     }
   }
   ss << "===================================================" << std::endl;
-  logger_.info(ss.str());
+  logger_->debug(ss.str());
 }
 
 }  // namespace autoware::diagnostic_graph_aggregator

@@ -33,7 +33,7 @@ class Graph
 {
 public:
   explicit Graph(const std::string & path);
-  Graph(const std::string & path, const std::string & id, const Logger & logger);
+  Graph(const std::string & path, const std::string & id, std::shared_ptr<Logger> logger);
   ~Graph();
   void update(const rclcpp::Time & stamp);
   bool update(const rclcpp::Time & stamp, const DiagnosticArray & array);

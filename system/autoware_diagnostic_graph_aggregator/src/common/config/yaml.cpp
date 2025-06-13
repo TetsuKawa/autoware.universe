@@ -16,7 +16,6 @@
 
 #include "config/errors.hpp"
 
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -31,11 +30,6 @@ ConfigYaml ConfigYaml::LoadFile(const std::string & path)
 ConfigYaml::ConfigYaml(const YAML::Node yaml)
 {
   yaml_ = yaml;
-}
-
-void ConfigYaml::dump() const
-{
-  std::cout << str() << std::endl;
 }
 
 std::string ConfigYaml::str() const

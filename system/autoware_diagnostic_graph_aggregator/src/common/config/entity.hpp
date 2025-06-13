@@ -21,6 +21,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace autoware::diagnostic_graph_aggregator
@@ -41,6 +42,12 @@ struct FileData
   std::vector<FileData *> files;
   std::vector<NodeUnit *> nodes;
   ConfigYaml yaml;
+};
+
+struct FileContext
+{
+  std::string file;
+  std::shared_ptr<std::unordered_set<std::string>> visited;
 };
 
 class Parser

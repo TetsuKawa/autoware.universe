@@ -52,10 +52,11 @@ DiagNodeStruct NodeUnit::create_struct()
 
 DiagNodeStatus NodeUnit::create_status()
 {
-  status_.level = latch_->level();
-  status_.input_level = latch_->input_level();
   status_.latch_level = latch_->latch_level();
-  status_.dependent = dependency();
+  status_.level = latch_->level();
+  status_.stable_level = histeresis_->level();
+  status_.actual_level = histeresis_->input_level();  // Note: Equals logic level.
+  status_.is_dependent = dependency();
   return status_;
 }
 
