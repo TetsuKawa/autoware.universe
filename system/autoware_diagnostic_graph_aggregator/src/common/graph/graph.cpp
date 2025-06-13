@@ -92,7 +92,7 @@ DiagGraphStruct Graph::create_struct_msg(const rclcpp::Time & stamp) const
   for (const auto & diag : diags_) msg.diags.push_back(diag->create_struct());
 
   for (const auto & parent : nodes_) {
-    for (const auto & child : parent->children()) {
+    for (const auto & child : parent->child_units()) {
       DiagLinkStruct link;
       link.parent = parent->index();
       link.child = child->index();

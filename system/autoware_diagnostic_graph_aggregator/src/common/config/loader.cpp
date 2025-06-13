@@ -255,7 +255,7 @@ void ConfigLoader::topological_sort()
 
     // Count degrees of each node.
     for (const auto & node : raws(nodes_)) {
-      for (const auto & child : filter<NodeUnit>(node->children())) {
+      for (const auto & child : node->child_nodes()) {
         ++degrees[child];
       }
     }
@@ -272,7 +272,7 @@ void ConfigLoader::topological_sort()
     while (!buffer.empty()) {
       const auto node = buffer.front();
       buffer.pop_front();
-      for (const auto & child : filter<NodeUnit>(node->children())) {
+      for (const auto & child : node->child_nodes()) {
         if (--degrees[child] == 0) {
           buffer.push_back(child);
         }
@@ -360,9 +360,16 @@ void ConfigLoader::apply_remove_edits()
 
 void ConfigLoader::finalize()
 {
+  std::unordered_map<BaseUnit *, std::vector<BaseUnit *>> parents;
+  for (const auto & parent : raws(nodes_)) {
+    for (const auto & child : parent->child_units()) {
+      parents[child].push_back(parent);
+    }
+  }
+
   int index = 0;
-  for (const auto & node : nodes_) node->finalize(index++);
-  for (const auto & diag : diags_) diag->finalize(index++);
+  for (const auto & node : raws(nodes_)) node->finalize(index++, parents[node]);
+  for (const auto & diag : raws(diags_)) diag->finalize(index++, parents[diag]);
 }
 
 void ConfigLoader::validate()

@@ -15,9 +15,9 @@
 #include "graph/units.hpp"
 
 #include "config/entity.hpp"
-#include "graph/levels.hpp"
 #include "graph/links.hpp"
-#include "graph/logic.hpp"
+#include "graph/nodes.hpp"
+#include "utils/memory.hpp"
 
 #include <memory>
 #include <string>
@@ -30,12 +30,13 @@
 namespace autoware::diagnostic_graph_aggregator
 {
 
-void BaseUnit::finalize(int index)
+void BaseUnit::finalize(int index, std::vector<BaseUnit *> parents)
 {
   index_ = index;
+  parents_ = parents;
 }
 
-std::vector<BaseUnit *> BaseUnit::children() const
+std::vector<BaseUnit *> BaseUnit::child_units() const
 {
   std::vector<BaseUnit *> result;
   for (const auto & port : ports()) {
@@ -44,6 +45,16 @@ std::vector<BaseUnit *> BaseUnit::children() const
     }
   }
   return result;
+}
+
+std::vector<NodeUnit *> BaseUnit::child_nodes() const
+{
+  return filter<NodeUnit>(child_units());
+}
+
+std::vector<BaseUnit *> BaseUnit::parent_units() const
+{
+  return parents_;
 }
 
 LinkUnit::LinkUnit(ConfigYaml yaml)

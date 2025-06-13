@@ -36,12 +36,15 @@ public:
   virtual std::vector<LinkPort *> ports() const = 0;
   virtual std::string debug() const { return "NotImplemented"; }
 
-  void finalize(int index);
+  void finalize(int index, std::vector<BaseUnit *> parents);
   int index() const { return index_; }
-  std::vector<BaseUnit *> children() const;
+  std::vector<BaseUnit *> child_units() const;
+  std::vector<NodeUnit *> child_nodes() const;
+  std::vector<BaseUnit *> parent_units() const;
 
 private:
   int index_;
+  std::vector<BaseUnit *> parents_;
 };
 
 class TempUnit : public BaseUnit

@@ -32,17 +32,11 @@ ament_auto_add_library(aggregator SHARED
 ament_auto_add_library(converter SHARED
   "src/node/converter.cpp"
 )
-
 target_include_directories(${PROJECT_NAME} PRIVATE "src/common")
 target_include_directories(aggregator PRIVATE "src/common")
 
-#ament_auto_add_executable(tree "src/tool/tree.cpp")
-#ament_auto_add_executable(plantuml "src/tool/plantuml.cpp")
-ament_auto_add_executable(check_graph "src/tool/check_graph.cpp")
-
-#target_include_directories(tree PRIVATE "src/common")
-#target_include_directories(plantuml PRIVATE "src/common")
-target_include_directories(check_graph PRIVATE "src/common")
+ament_auto_add_executable(tree "src/tool/tree.cpp")
+target_include_directories(tree PRIVATE "src/common")
 
 rclcpp_components_register_node(aggregator
   PLUGIN "autoware::diagnostic_graph_aggregator::AggregatorNode"
