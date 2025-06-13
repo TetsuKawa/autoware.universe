@@ -15,7 +15,6 @@
 #ifndef AUTOWARE_COMMAND_MODE_SWITCHER__COMMAND_PLUGIN_HPP_
 #define AUTOWARE_COMMAND_MODE_SWITCHER__COMMAND_PLUGIN_HPP_
 
-#include <autoware_command_mode_types/types/command_mode_status.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <string>
@@ -23,7 +22,12 @@
 namespace autoware::command_mode_switcher
 {
 
-using command_mode_types::MrmState;
+enum class MrmState {
+  Normal,
+  Operating,
+  Succeeded,
+  Failed,
+};
 
 struct SourceState
 {

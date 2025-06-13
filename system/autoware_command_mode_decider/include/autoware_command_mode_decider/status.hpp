@@ -15,9 +15,10 @@
 #ifndef AUTOWARE_COMMAND_MODE_DECIDER__STATUS_HPP_
 #define AUTOWARE_COMMAND_MODE_DECIDER__STATUS_HPP_
 
-#include <autoware_command_mode_types/types/command_mode_status.hpp>
+#include <rclcpp/time.hpp>
 
 #include <tier4_system_msgs/msg/command_mode_availability.hpp>
+#include <tier4_system_msgs/msg/command_mode_status_item.hpp>
 
 #include <optional>
 #include <string>
@@ -27,8 +28,24 @@
 namespace autoware::command_mode_decider
 {
 
-using autoware::command_mode_types::CommandModeStatusItem;
-using AvailabilityItem = tier4_system_msgs::msg::CommandModeAvailabilityItem;
+using AvailabilityMessage = tier4_system_msgs::msg::CommandModeAvailabilityItem;
+using StatusMessage = tier4_system_msgs::msg::CommandModeStatusItem;
+
+struct CommandModeStatusItem
+{
+  explicit CommandModeStatusItem(uint16_t mode = 0);
+  explicit CommandModeStatusItem(const StatusMessage & message);
+  bool is_completed() const;
+  bool is_vehicle_ready() const;
+  bool is_network_ready() const;
+
+  uint16_t mode() const { return message_.mode; }
+  uint16_t mrm() const { return message_.mrm; }
+  bool request() const { return message_.request; }
+
+private:
+  StatusMessage message_;
+};
 
 struct StatusItem
 {
@@ -53,8 +70,8 @@ class CommandModeStatusTable
 {
 public:
   void init(const std::vector<uint16_t> & modes);
-  void set(const CommandModeStatusItem & item, const rclcpp::Time & stamp);
-  void set(const AvailabilityItem & item, const rclcpp::Time & stamp);
+  void set(const StatusMessage & item, const rclcpp::Time & stamp);
+  void set(const AvailabilityMessage & item, const rclcpp::Time & stamp);
   void set(uint16_t mode, bool drivable, const rclcpp::Time & stamp);
   void check_timeout(const rclcpp::Time & now);
   bool ready() const;

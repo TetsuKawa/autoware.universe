@@ -20,7 +20,9 @@
 namespace autoware::command_mode_types::modes
 {
 
+// Mode 0-9 is reserved. Do not use them for user defined modes.
 constexpr uint16_t unknown = 0;
+
 constexpr uint16_t manual = 1000;
 constexpr uint16_t stop = 1001;
 constexpr uint16_t autonomous = 1002;

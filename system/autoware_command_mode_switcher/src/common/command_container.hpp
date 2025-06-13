@@ -17,7 +17,7 @@
 
 #include "autoware_command_mode_switcher/command_plugin.hpp"
 
-#include <autoware_command_mode_types/types/command_mode_status.hpp>
+#include <tier4_system_msgs/msg/command_mode_status_item.hpp>
 
 #include <memory>
 
@@ -29,7 +29,7 @@ struct Command
   explicit Command(std::shared_ptr<CommandPlugin> plugin);
 
   std::shared_ptr<CommandPlugin> plugin;
-  command_mode_types::CommandModeStatusItem status;
+  tier4_system_msgs::msg::CommandModeStatusItem status;
 };
 
 }  // namespace autoware::command_mode_switcher

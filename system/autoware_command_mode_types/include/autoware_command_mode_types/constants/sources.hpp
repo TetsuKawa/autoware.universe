@@ -18,17 +18,14 @@
 namespace autoware::command_mode_types::sources
 {
 
-// Builtin source
+// Source 0-9 is reserved. Do not use them for user defined sources.
 constexpr uint16_t unknown = 0;
 constexpr uint16_t builtin = 1;
 
-// Main sources
 constexpr uint16_t stop = 11;
 constexpr uint16_t main = 12;
 constexpr uint16_t local = 13;
 constexpr uint16_t remote = 14;
-
-// MRM sources
 constexpr uint16_t emergency_stop = 21;
 
 }  // namespace autoware::command_mode_types::sources

@@ -87,7 +87,7 @@ CommandModeDeciderBase::CommandModeDeciderBase(const rclcpp::NodeOptions & optio
   // Interface with switcher nodes.
   pub_command_mode_request_ =
     create_publisher<CommandModeRequest>("~/command_mode/request", rclcpp::QoS(1));
-  sub_command_mode_status_ = create_subscription<CommandModeStatusAdapter>(
+  sub_command_mode_status_ = create_subscription<CommandModeStatus>(
     "~/command_mode/status", rclcpp::QoS(50).transient_local(),
     std::bind(&CommandModeDeciderBase::on_status, this, std::placeholders::_1));
   sub_availability_ = create_subscription<CommandModeAvailability>(
@@ -198,7 +198,7 @@ void CommandModeDeciderBase::on_control_mode(const ControlModeReport & msg)
 
   // Update command mode status for manual mode.
   {
-    CommandModeStatusItem item;
+    StatusMessage item;
     item.mode = autoware::command_mode_types::modes::manual;
     item.transition = false;
     item.request = curr_manual_control_;
@@ -213,7 +213,7 @@ void CommandModeDeciderBase::on_control_mode(const ControlModeReport & msg)
 
   // Update command mode availability for manual mode.
   {
-    AvailabilityItem item;
+    AvailabilityMessage item;
     item.mode = autoware::command_mode_types::modes::manual;
     item.available = true;
     command_mode_status_.set(item, msg.stamp);
@@ -365,7 +365,7 @@ void CommandModeDeciderBase::sync_command_mode()
   // Skip the request if all modes are already requested.
   std::vector<uint16_t> requesting_modes;
   for (const auto & mode : request_modes_) {
-    if (!command_mode_status_.get(mode).request) {
+    if (!command_mode_status_.get(mode).request()) {
       requesting_modes.push_back(mode);
     }
   }
@@ -425,23 +425,22 @@ void CommandModeDeciderBase::publish_operation_mode_state()
 
 void CommandModeDeciderBase::publish_mrm_state()
 {
-  using CommandModeMrmState = autoware::command_mode_types::MrmState;
-  const auto convert = [](const CommandModeMrmState state) {
+  const auto convert = [](const uint16_t state) {
     // clang-format off
     switch (state) {
-      case CommandModeMrmState::Normal:    return MrmState::NORMAL;
-      case CommandModeMrmState::Operating: return MrmState::MRM_OPERATING;
-      case CommandModeMrmState::Succeeded: return MrmState::MRM_SUCCEEDED;
-      case CommandModeMrmState::Failed:    return MrmState::MRM_FAILED;
-      default:                             return MrmState::UNKNOWN;
+      case StatusMessage::NORMAL:    return MrmState::NORMAL;
+      case StatusMessage::OPERATING: return MrmState::MRM_OPERATING;
+      case StatusMessage::SUCCEEDED: return MrmState::MRM_SUCCEEDED;
+      case StatusMessage::FAILED:    return MrmState::MRM_FAILED;
+      default:                       return MrmState::UNKNOWN;
     }
     // clang-format on
   };
   const auto status = command_mode_status_.get(curr_mode_);
   MrmState state;
   state.stamp = now();
-  state.state = convert(status.mrm);
-  state.behavior = plugin_->to_mrm_behavior(status.mode);
+  state.state = convert(status.mrm());
+  state.behavior = plugin_->to_mrm_behavior(status.mode());
   pub_mrm_state_->publish(state);
 }
 
@@ -458,7 +457,7 @@ ResponseStatus CommandModeDeciderBase::check_mode_exists(uint16_t mode)
   if (!is_modes_ready_) {
     return make_response(false, "Mode management is not ready.");
   }
-  if (command_mode_status_.get(mode).mode == autoware::command_mode_types::modes::unknown) {
+  if (command_mode_status_.get(mode).mode() == autoware::command_mode_types::modes::unknown) {
     return make_response(false, "Invalid mode: " + std::to_string(mode));
   }
   return make_response(true);

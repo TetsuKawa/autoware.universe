@@ -23,6 +23,41 @@
 namespace autoware::command_mode_decider
 {
 
+CommandModeStatusItem::CommandModeStatusItem(uint16_t mode)
+{
+  message_.mode = mode;
+  message_.mrm = StatusMessage::NORMAL;
+  message_.transition_completed = false;
+  message_.transition = false;
+  message_.request = false;
+  message_.vehicle_selected = false;
+  message_.network_selected = false;
+  message_.command_selected = false;
+  message_.command_exclusive = false;
+  message_.command_enabled = false;
+  message_.command_disabled = false;
+}
+
+CommandModeStatusItem::CommandModeStatusItem(const StatusMessage & message)
+{
+  message_ = message;
+}
+
+bool CommandModeStatusItem::is_completed() const
+{
+  return !message_.transition && is_vehicle_ready();
+}
+
+bool CommandModeStatusItem::is_vehicle_ready() const
+{
+  return message_.vehicle_selected && is_network_ready();
+}
+
+bool CommandModeStatusItem::is_network_ready() const
+{
+  return message_.network_selected && message_.command_selected && message_.command_exclusive;
+}
+
 void CommandModeStatusTable::init(const std::vector<uint16_t> & modes)
 {
   for (const auto & mode : modes) {
@@ -39,16 +74,16 @@ bool CommandModeStatusTable::ready() const
   return true;
 }
 
-void CommandModeStatusTable::set(const CommandModeStatusItem & item, const rclcpp::Time & stamp)
+void CommandModeStatusTable::set(const StatusMessage & item, const rclcpp::Time & stamp)
 {
   const auto iter = items_.find(item.mode);
   if (iter != items_.end()) {
-    iter->second.status.data = item;
+    iter->second.status.data = CommandModeStatusItem(item);
     iter->second.status.stamp = stamp;
   }
 }
 
-void CommandModeStatusTable::set(const AvailabilityItem & item, const rclcpp::Time & stamp)
+void CommandModeStatusTable::set(const AvailabilityMessage & item, const rclcpp::Time & stamp)
 {
   const auto iter = items_.find(item.mode);
   if (iter != items_.end()) {

@@ -14,8 +14,6 @@
 
 #include "command_mode_switcher.hpp"
 
-#include <autoware_command_mode_types/adapters/command_mode_status.hpp>
-
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -68,8 +66,8 @@ CommandModeSwitcher::CommandModeSwitcher(const rclcpp::NodeOptions & options)
     command->plugin->initialize();
   }
 
-  pub_status_ = create_publisher<CommandModeStatusAdapter>(
-    "~/command_mode/status", rclcpp::QoS(1).transient_local());
+  pub_status_ =
+    create_publisher<CommandModeStatus>("~/command_mode/status", rclcpp::QoS(1).transient_local());
   sub_request_ = create_subscription<CommandModeRequest>(
     "~/command_mode/request", rclcpp::QoS(1),
     std::bind(&CommandModeSwitcher::on_request, this, std::placeholders::_1));
@@ -196,6 +194,18 @@ void CommandModeSwitcher::update_status()
     group_count[source].disabled += command->status.command_disabled ? 1 : 0;
   }
 
+  const auto to_message = [](const MrmState & state) {
+    // clang-format off
+    using Message = tier4_system_msgs::msg::CommandModeStatusItem;
+    switch (state) {
+      case MrmState::Normal:     return Message::NORMAL;
+      case MrmState::Operating:  return Message::OPERATING;
+      case MrmState::Succeeded:  return Message::SUCCEEDED;
+      case MrmState::Failed:     return Message::FAILED;
+      default:                   return Message::UNDEFINED;
+    }
+    // clang-format on
+  };
   for (const auto & command : commands_) {
     auto & status = command->status;
     auto & plugin = command->plugin;
@@ -204,7 +214,7 @@ void CommandModeSwitcher::update_status()
     status.command_selected = control_gate_interface_.is_selected(*plugin);
     status.network_selected = network_gate_interface_.is_selected(ecu_);
     status.vehicle_selected = vehicle_gate_interface_.is_selected(*plugin);
-    status.mrm = plugin->update_mrm_state();
+    status.mrm = to_message(plugin->update_mrm_state());
     status.transition_completed = plugin->get_transition_completed();
   }
 }

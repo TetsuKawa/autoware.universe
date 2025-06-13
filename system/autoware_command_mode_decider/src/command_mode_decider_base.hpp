@@ -19,7 +19,6 @@
 #include "autoware_command_mode_decider/status.hpp"
 
 #include <autoware/universe_utils/ros/polling_subscriber.hpp>
-#include <autoware_command_mode_types/adapters/command_mode_status.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <pluginlib/class_loader.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -40,8 +39,6 @@
 namespace autoware::command_mode_decider
 {
 
-using autoware::command_mode_types::CommandModeStatus;
-using autoware::command_mode_types::CommandModeStatusAdapter;
 using autoware_adapi_v1_msgs::msg::MrmState;
 using autoware_adapi_v1_msgs::msg::OperationModeState;
 using autoware_common_msgs::msg::ResponseStatus;
@@ -49,6 +46,7 @@ using autoware_vehicle_msgs::msg::ControlModeReport;
 using tier4_system_msgs::msg::CommandModeAvailability;
 using tier4_system_msgs::msg::CommandModeRequest;
 using tier4_system_msgs::msg::CommandModeRequestItem;
+using tier4_system_msgs::msg::CommandModeStatus;
 using tier4_system_msgs::msg::ModeChangeAvailable;
 using tier4_system_msgs::srv::ChangeAutowareControl;
 using tier4_system_msgs::srv::ChangeOperationMode;
@@ -85,7 +83,7 @@ private:
 
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<CommandModeRequest>::SharedPtr pub_command_mode_request_;
-  rclcpp::Subscription<CommandModeStatusAdapter>::SharedPtr sub_command_mode_status_;
+  rclcpp::Subscription<CommandModeStatus>::SharedPtr sub_command_mode_status_;
   rclcpp::Subscription<CommandModeAvailability>::SharedPtr sub_availability_;
   rclcpp::Subscription<ModeChangeAvailable>::SharedPtr sub_transition_available_;
   rclcpp::Subscription<ControlModeReport>::SharedPtr sub_control_mode_;
