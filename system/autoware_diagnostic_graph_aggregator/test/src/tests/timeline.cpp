@@ -67,6 +67,7 @@ void TimelineTest::execute(const std::string & path)
         diagnostic_map_sequence.resize(levels.size());
       }
       for (size_t i = 0; i < levels.size(); ++i) {
+        if (levels[i] == '-') continue;
         diagnostic_map_sequence[i][name] = letter_to_level(levels[i]);
       }
     }

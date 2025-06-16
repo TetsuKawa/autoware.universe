@@ -40,6 +40,29 @@ bool match(const std::string & target, const std::string & expect)
   return true;
 }
 
+TEST(GraphLevel, Timeout)
+{
+  // clang-format off
+  const auto input      = "KKKKKKKKKK--------------------";
+  const auto result_0_5 = "KKKKKKKKKKKKKKEEEEEEEEEEEEEEEE";
+  const auto result_1_0 = "KKKKKKKKKKKKKKKKKKKEEEEEEEEEEE";
+  const auto result_1_5 = "KKKKKKKKKKKKKKKKKKKKKKKKEEEEEE";
+  // clang-format on
+
+  autoware::diagnostic_graph_aggregator::TimelineTest test;
+  test.set_interval(0.1);
+  test.set("dummy: name0", input);
+  test.set("dummy: name1", input);
+  test.set("dummy: name2", input);
+  test.set("dummy: name3", input);
+  test.execute(resource("levels/timeout.yaml"));
+
+  EXPECT_TRUE(match(test.get("path0"), result_1_0));
+  EXPECT_TRUE(match(test.get("path1"), result_0_5));
+  EXPECT_TRUE(match(test.get("path2"), result_1_0));
+  EXPECT_TRUE(match(test.get("path3"), result_1_5));
+}
+
 TEST(GraphLevel, Latch1)
 {
   // clang-format off
@@ -84,12 +107,12 @@ TEST(GraphLevel, Latch3)
 {
   // clang-format off
   const auto input  = "KKKKKEKKKKKKKKKKKKKK";
-  const auto result = "KKKKKEEEEEKKKKKKKKKK";
+  const auto result = "KKKKKEEEEEEEEEEKKKKK";
   // clang-format on
 
   autoware::diagnostic_graph_aggregator::TimelineTest test;
   test.set_interval(0.1);
-  test.set_reset({10});
+  test.set_reset({15});
   test.set("dummy: name1", input);
   test.execute(resource("levels/latch.yaml"));
 
