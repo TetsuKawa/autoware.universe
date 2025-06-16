@@ -16,8 +16,8 @@
 #define AUTONOMOUS_HPP_
 
 #include <autoware_command_mode_switcher/command_plugin.hpp>
-#include <autoware_command_mode_types/constants/modes.hpp>
-#include <autoware_command_mode_types/constants/sources.hpp>
+#include <autoware_command_mode_types/modes.hpp>
+#include <autoware_command_mode_types/sources.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <tier4_system_msgs/msg/mode_change_available.hpp>

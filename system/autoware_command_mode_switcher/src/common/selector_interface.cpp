@@ -14,7 +14,7 @@
 
 #include "selector_interface.hpp"
 
-#include <autoware_command_mode_types/constants/sources.hpp>
+#include <autoware_command_mode_types/sources.hpp>
 
 #include <memory>
 #include <utility>

@@ -85,7 +85,7 @@ ControlCmdGate::ControlCmdGate(const rclcpp::NodeOptions & options)
   // Create command sources.
   {
     const auto get_source_name = [this](const uint16_t input) {
-      return declare_parameter<std::string>("command_source_naming." + std::to_string(input));
+      return declare_parameter<std::string>("inputs_names." + std::to_string(input));
     };
 
     std::vector<std::unique_ptr<CommandSource>> sources;

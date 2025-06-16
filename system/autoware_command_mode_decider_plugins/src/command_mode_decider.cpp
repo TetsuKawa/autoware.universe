@@ -14,7 +14,7 @@
 
 #include "command_mode_decider.hpp"
 
-#include <autoware_command_mode_types/constants/modes.hpp>
+#include <autoware_command_mode_types/modes.hpp>
 
 #include <autoware_adapi_v1_msgs/msg/mrm_state.hpp>
 #include <autoware_adapi_v1_msgs/msg/operation_mode_state.hpp>

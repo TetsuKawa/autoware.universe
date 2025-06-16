@@ -14,7 +14,7 @@
 
 #include "autoware_command_mode_decider/status.hpp"
 
-#include <autoware_command_mode_types/constants/modes.hpp>
+#include <autoware_command_mode_types/modes.hpp>
 
 #include <sstream>
 #include <string>

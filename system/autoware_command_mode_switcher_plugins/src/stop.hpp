@@ -16,8 +16,8 @@
 #define STOP_HPP_
 
 #include <autoware_command_mode_switcher/command_plugin.hpp>
-#include <autoware_command_mode_types/constants/modes.hpp>
-#include <autoware_command_mode_types/constants/sources.hpp>
+#include <autoware_command_mode_types/modes.hpp>
+#include <autoware_command_mode_types/sources.hpp>
 
 namespace autoware::command_mode_switcher
 {

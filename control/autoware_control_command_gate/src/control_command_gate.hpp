@@ -19,7 +19,7 @@
 #include "command/interface.hpp"
 #include "command/selector.hpp"
 
-#include <autoware_command_mode_types/constants/sources.hpp>
+#include <autoware_command_mode_types/sources.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
 

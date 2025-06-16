@@ -14,7 +14,7 @@
 
 #include "command_mode_decider_base.hpp"
 
-#include <autoware_command_mode_types/constants/modes.hpp>
+#include <autoware_command_mode_types/modes.hpp>
 
 #include <memory>
 #include <string>
