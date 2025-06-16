@@ -12,8 +12,8 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-#ifndef AUTOWARE_COMMAND_MODE_TYPES__CONSTANTS__SOURCES_HPP_
-#define AUTOWARE_COMMAND_MODE_TYPES__CONSTANTS__SOURCES_HPP_
+#ifndef AUTOWARE_COMMAND_MODE_TYPES__SOURCES_HPP_
+#define AUTOWARE_COMMAND_MODE_TYPES__SOURCES_HPP_
 
 namespace autoware::command_mode_types::sources
 {
@@ -30,4 +30,4 @@ constexpr uint16_t emergency_stop = 21;
 
 }  // namespace autoware::command_mode_types::sources
 
-#endif  // AUTOWARE_COMMAND_MODE_TYPES__CONSTANTS__SOURCES_HPP_
+#endif  // AUTOWARE_COMMAND_MODE_TYPES__SOURCES_HPP_

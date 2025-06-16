@@ -1,6 +1,12 @@
 /**:
   ros__parameters:
     inputs: [11, 12, 13, 14, 21]  # See autoware_command_mode_types/constants/sources.hpp
+    inputs_names:
+      11: stop
+      12: main
+      13: local
+      14: remote
+      21: emergency_stop
     rate: 10.0
     builtin_emergency_acceleration: -2.4
     diag_timeout_warn_duration: 1.0

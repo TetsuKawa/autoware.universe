@@ -12,8 +12,8 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-#ifndef AUTOWARE_COMMAND_MODE_TYPES__CONSTANTS__MODES_HPP_
-#define AUTOWARE_COMMAND_MODE_TYPES__CONSTANTS__MODES_HPP_
+#ifndef AUTOWARE_COMMAND_MODE_TYPES__MODES_HPP_
+#define AUTOWARE_COMMAND_MODE_TYPES__MODES_HPP_
 
 #include <cstdint>
 
@@ -34,4 +34,4 @@ constexpr uint16_t pull_over = 2003;
 
 }  // namespace autoware::command_mode_types::modes
 
-#endif  // AUTOWARE_COMMAND_MODE_TYPES__CONSTANTS__MODES_HPP_
+#endif  // AUTOWARE_COMMAND_MODE_TYPES__MODES_HPP_

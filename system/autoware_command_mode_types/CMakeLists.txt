@@ -7,4 +7,4 @@ autoware_package()
 if(BUILD_TESTING)
 endif()
 
-ament_auto_package(INSTALL_TO_SHARE config)
+ament_auto_package()
