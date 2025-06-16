@@ -168,16 +168,17 @@ void ConfigLoader::make_diag_units()
   };
 
   // The diag units with the same name will be merged.
-  std::unordered_map<std::string, BaseUnit *> diags;
+  std::unordered_set<std::string> names;
   for (const auto & port : ports_) {
     for (auto & unit : port->units_) {
       if (const auto temp = dynamic_cast<TempDiag *>(unit)) {
         const auto yaml = temp->yaml();
         const auto name = take_diag_name(yaml);
-        if (!diags.count(name)) {
-          diags[name] = load_diag(yaml, name);
+        const auto [iter, success] = names.insert(name);
+        if (!success) {
+          throw SameDiagFound(name);
         }
-        unit = diags.at(name);  // Replace temp unit link.
+        unit = load_diag(yaml, name);  // Replace temp unit link.
       }
     }
   }

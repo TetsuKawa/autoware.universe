@@ -49,6 +49,7 @@ private:
   DiagLeafStruct struct_;
   DiagLeafStatus status_;
   std::unique_ptr<TimeoutLevel> timeout_;
+  std::unique_ptr<HysteresisLevel> hysteresis_;
 };
 
 }  // namespace autoware::diagnostic_graph_aggregator

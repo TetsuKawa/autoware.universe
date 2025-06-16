@@ -36,6 +36,11 @@ struct SameFileFound : public Exception
   using Exception::Exception;
 };
 
+struct SameDiagFound : public Exception
+{
+  using Exception::Exception;
+};
+
 struct InvalidType : public Exception
 {
   using Exception::Exception;

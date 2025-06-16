@@ -52,7 +52,6 @@ private:
   DiagNodeStatus status_;
   std::unique_ptr<Logic> logic_;
   std::unique_ptr<LatchLevel> latch_;
-  std::unique_ptr<HysteresisLevel> histeresis_;
   LinkItem * dependency_;
 };
 

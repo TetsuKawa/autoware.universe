@@ -11,5 +11,5 @@ units:
 
   - path: /autoware/foobar
     type: diag
-    node: bar
-    name: bar
+    node: foobar
+    name: foobar

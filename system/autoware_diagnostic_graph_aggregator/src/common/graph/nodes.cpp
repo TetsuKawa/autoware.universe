@@ -34,7 +34,6 @@ NodeUnit::NodeUnit(Parser & parser)
 
   logic_ = LogicFactory::Create(parser);
   latch_ = std::make_unique<LatchLevel>(parser.yaml());
-  histeresis_ = std::make_unique<HysteresisLevel>(parser.yaml());
 
   struct_.path = parser.yaml().optional("path").text("");
   struct_.type = parser.type();
@@ -52,10 +51,9 @@ DiagNodeStruct NodeUnit::create_struct()
 
 DiagNodeStatus NodeUnit::create_status()
 {
-  status_.latch_level = latch_->latch_level();
   status_.level = latch_->level();
-  status_.stable_level = histeresis_->level();
-  status_.actual_level = histeresis_->input_level();  // Note: Equals logic level.
+  status_.input_level = latch_->input_level();  // Note: Equals logic level.
+  status_.latch_level = latch_->latch_level();
   status_.is_dependent = dependency();
   return status_;
 }
@@ -92,8 +90,7 @@ std::string NodeUnit::type() const
 
 void NodeUnit::update(const rclcpp::Time & stamp)
 {
-  histeresis_->update(stamp, logic_->level());
-  latch_->update(stamp, histeresis_->level());
+  latch_->update(stamp, logic_->level());
 }
 
 }  // namespace autoware::diagnostic_graph_aggregator

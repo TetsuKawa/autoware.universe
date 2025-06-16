@@ -53,12 +53,15 @@ TEST(GraphLevel, Latch1)
   autoware::diagnostic_graph_aggregator::TimelineTest test;
   test.set_interval(0.1);
   test.set("dummy: name0", input);
+  test.set("dummy: name1", input);
+  test.set("dummy: name2", input);
+  test.set("dummy: name3", input);
   test.execute(resource("levels/latch.yaml"));
 
-  EXPECT_TRUE(match(test.get("path1"), result_off));
-  EXPECT_TRUE(match(test.get("path2"), result_0_0));
-  EXPECT_TRUE(match(test.get("path3"), result_0_2));
-  EXPECT_TRUE(match(test.get("path4"), result_0_4));
+  EXPECT_TRUE(match(test.get("path0"), result_off));
+  EXPECT_TRUE(match(test.get("path1"), result_0_0));
+  EXPECT_TRUE(match(test.get("path2"), result_0_2));
+  EXPECT_TRUE(match(test.get("path3"), result_0_4));
 }
 
 TEST(GraphLevel, Latch2)
@@ -71,10 +74,10 @@ TEST(GraphLevel, Latch2)
   autoware::diagnostic_graph_aggregator::TimelineTest test;
   test.set_interval(0.1);
   test.set_reset({10});
-  test.set("dummy: name0", input);
+  test.set("dummy: name1", input);
   test.execute(resource("levels/latch.yaml"));
 
-  EXPECT_TRUE(match(test.get("path2"), result));
+  EXPECT_TRUE(match(test.get("path1"), result));
 }
 
 TEST(GraphLevel, Latch3)
@@ -87,10 +90,10 @@ TEST(GraphLevel, Latch3)
   autoware::diagnostic_graph_aggregator::TimelineTest test;
   test.set_interval(0.1);
   test.set_reset({10});
-  test.set("dummy: name0", input);
+  test.set("dummy: name1", input);
   test.execute(resource("levels/latch.yaml"));
 
-  EXPECT_TRUE(match(test.get("path2"), result));
+  EXPECT_TRUE(match(test.get("path1"), result));
 }
 
 TEST(GraphLevel, Latch4)
@@ -103,10 +106,10 @@ TEST(GraphLevel, Latch4)
   autoware::diagnostic_graph_aggregator::TimelineTest test;
   test.set_interval(0.1);
   test.set_reset({10});
-  test.set("dummy: name0", input);
+  test.set("dummy: name1", input);
   test.execute(resource("levels/latch.yaml"));
 
-  EXPECT_TRUE(match(test.get("path2"), result));
+  EXPECT_TRUE(match(test.get("path1"), result));
 }
 
 TEST(GraphLevel, Latch5)
@@ -119,10 +122,10 @@ TEST(GraphLevel, Latch5)
   autoware::diagnostic_graph_aggregator::TimelineTest test;
   test.set_interval(0.1);
   test.set_reset({10});
-  test.set("dummy: name0", input);
+  test.set("dummy: name1", input);
   test.execute(resource("levels/latch.yaml"));
 
-  EXPECT_TRUE(match(test.get("path2"), result));
+  EXPECT_TRUE(match(test.get("path1"), result));
 }
 
 TEST(GraphLevel, Hysteresis1)
@@ -137,12 +140,15 @@ TEST(GraphLevel, Hysteresis1)
   autoware::diagnostic_graph_aggregator::TimelineTest test;
   test.set_interval(0.1);
   test.set("dummy: name0", input);
+  test.set("dummy: name1", input);
+  test.set("dummy: name2", input);
+  test.set("dummy: name3", input);
   test.execute(resource("levels/hysteresis.yaml"));
 
+  EXPECT_TRUE(match(test.get("path0"), result_0_0));
   EXPECT_TRUE(match(test.get("path1"), result_0_0));
-  EXPECT_TRUE(match(test.get("path2"), result_0_0));
-  EXPECT_TRUE(match(test.get("path3"), result_0_2));
-  EXPECT_TRUE(match(test.get("path4"), result_0_4));
+  EXPECT_TRUE(match(test.get("path2"), result_0_2));
+  EXPECT_TRUE(match(test.get("path3"), result_0_4));
 }
 
 TEST(GraphLevel, Hysteresis2)
@@ -157,12 +163,15 @@ TEST(GraphLevel, Hysteresis2)
   autoware::diagnostic_graph_aggregator::TimelineTest test;
   test.set_interval(0.1);
   test.set("dummy: name0", input);
+  test.set("dummy: name1", input);
+  test.set("dummy: name2", input);
+  test.set("dummy: name3", input);
   test.execute(resource("levels/hysteresis.yaml"));
 
+  EXPECT_TRUE(match(test.get("path0"), result_0_0));
   EXPECT_TRUE(match(test.get("path1"), result_0_0));
-  EXPECT_TRUE(match(test.get("path2"), result_0_0));
-  EXPECT_TRUE(match(test.get("path3"), result_0_2));
-  EXPECT_TRUE(match(test.get("path4"), result_0_4));
+  EXPECT_TRUE(match(test.get("path2"), result_0_2));
+  EXPECT_TRUE(match(test.get("path3"), result_0_4));
 }
 
 TEST(GraphLevel, Hysteresis3)
@@ -177,12 +186,15 @@ TEST(GraphLevel, Hysteresis3)
   autoware::diagnostic_graph_aggregator::TimelineTest test;
   test.set_interval(0.1);
   test.set("dummy: name0", input);
+  test.set("dummy: name1", input);
+  test.set("dummy: name2", input);
+  test.set("dummy: name3", input);
   test.execute(resource("levels/hysteresis.yaml"));
 
+  EXPECT_TRUE(match(test.get("path0"), result_0_0));
   EXPECT_TRUE(match(test.get("path1"), result_0_0));
-  EXPECT_TRUE(match(test.get("path2"), result_0_0));
-  EXPECT_TRUE(match(test.get("path3"), result_0_2));
-  EXPECT_TRUE(match(test.get("path4"), result_0_4));
+  EXPECT_TRUE(match(test.get("path2"), result_0_2));
+  EXPECT_TRUE(match(test.get("path3"), result_0_4));
 }
 
 TEST(GraphLevel, Hysteresis4)
@@ -197,12 +209,15 @@ TEST(GraphLevel, Hysteresis4)
   autoware::diagnostic_graph_aggregator::TimelineTest test;
   test.set_interval(0.1);
   test.set("dummy: name0", input);
+  test.set("dummy: name1", input);
+  test.set("dummy: name2", input);
+  test.set("dummy: name3", input);
   test.execute(resource("levels/hysteresis.yaml"));
 
+  EXPECT_TRUE(match(test.get("path0"), result_0_0));
   EXPECT_TRUE(match(test.get("path1"), result_0_0));
-  EXPECT_TRUE(match(test.get("path2"), result_0_0));
-  EXPECT_TRUE(match(test.get("path3"), result_0_2));
-  EXPECT_TRUE(match(test.get("path4"), result_0_4));
+  EXPECT_TRUE(match(test.get("path2"), result_0_2));
+  EXPECT_TRUE(match(test.get("path3"), result_0_4));
 }
 
 TEST(GraphLevel, Combination)

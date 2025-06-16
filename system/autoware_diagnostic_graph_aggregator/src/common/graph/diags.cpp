@@ -30,6 +30,7 @@ namespace autoware::diagnostic_graph_aggregator
 DiagUnit::DiagUnit(ConfigYaml yaml, const std::string & name)
 {
   timeout_ = std::make_unique<TimeoutLevel>(yaml);
+  hysteresis_ = std::make_unique<HysteresisLevel>(yaml);
 
   struct_.name = name;
   status_.level = DiagnosticStatus::STALE;
@@ -46,13 +47,14 @@ DiagLeafStruct DiagUnit::create_struct()
 
 DiagLeafStatus DiagUnit::create_status()
 {
-  status_.level = timeout_->level();
+  status_.level = hysteresis_->level();
+  status_.input_level = hysteresis_->input_level();
   return status_;
 }
 
 DiagnosticLevel DiagUnit::level() const
 {
-  return timeout_->level();
+  return hysteresis_->level();
 }
 
 std::string DiagUnit::name() const
@@ -63,10 +65,12 @@ std::string DiagUnit::name() const
 void DiagUnit::update(const rclcpp::Time & stamp)
 {
   timeout_->update(stamp);
+  hysteresis_->update(stamp, timeout_->level());
 }
 
 void DiagUnit::update(const rclcpp::Time & stamp, const DiagnosticStatus & status)
 {
+  // No need to update hysteresis because update function is called before using level.
   timeout_->update(stamp, status.level);
 
   status_.message = status.message;
