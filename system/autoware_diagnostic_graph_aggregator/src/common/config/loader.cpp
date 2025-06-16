@@ -26,6 +26,7 @@
 #include <filesystem>
 #include <memory>
 #include <queue>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -318,14 +319,39 @@ void ConfigLoader::apply_remove_edits()
   }
 
   // Mark target paths to be removed.
+  const auto remove_by_regex = [&remove_paths](ConfigYaml & yaml) {
+    const auto raw_regex = yaml.optional("regex").text("");
+    if (raw_regex.empty()) {
+      return false;
+    }
+    const std::regex regex{raw_regex};
+    bool is_any_removed = false;
+    for (const auto & [path, flag] : remove_paths) {
+      if (std::regex_match(path, regex)) {
+        remove_paths[path] = true;
+        is_any_removed = true;
+      }
+    }
+    if (!is_any_removed) {
+      throw PathNotFound(raw_regex);
+    } else {
+      return true;
+    }
+  };
+  const auto remove_by_fullpath = [&remove_paths](ConfigYaml & yaml) {
+    const auto path = yaml.required("path").text();
+    if (remove_paths.count(path) == 0) {
+      throw PathNotFound(path);
+    } else {
+      remove_paths[path] = true;
+      return true;
+    }
+  };
   for (ConfigYaml yaml : list_edits()) {
     const auto type = yaml.required("type").text();
-    if (type != "remove") continue;
-    const auto path = yaml.required("path").text();
-    if (!remove_paths.count(path)) {
-      throw PathNotFound(path);
+    if (type == "remove") {
+      remove_by_regex(yaml) || remove_by_fullpath(yaml);
     }
-    remove_paths[path] = true;
   }
 
   // Mark target nodes to be removed.

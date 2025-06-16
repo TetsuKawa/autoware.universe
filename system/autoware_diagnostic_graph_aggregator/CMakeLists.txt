@@ -49,10 +49,11 @@ rclcpp_components_register_node(converter
 
 if(BUILD_TESTING)
   get_filename_component(RESOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/test/files" ABSOLUTE)
-  ament_auto_add_gtest(gtest_${PROJECT_NAME}
+  ament_auto_add_gmock(gtest_${PROJECT_NAME}
     "test/src/test_graph_load.cpp"
     "test/src/test_logics.cpp"
     "test/src/test_levels.cpp"
+    "test/src/test_remove.cpp"
     "test/src/tests/utils.cpp"
     "test/src/tests/timeline.cpp"
   )

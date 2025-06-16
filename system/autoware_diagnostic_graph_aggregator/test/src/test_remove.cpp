@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "graph/error.hpp"
+#include "config/errors.hpp"
 #include "graph/graph.hpp"
-#include "graph/units.hpp"
-#include "utils.hpp"
+#include "graph/nodes.hpp"
+#include "tests/utils.hpp"
 
 #include <gmock/gmock.h>
 
@@ -30,37 +30,36 @@ struct Param
   std::vector<std::string> expected;
 };
 
-class GraphConfigTest : public testing::TestWithParam<Param>
+class RemoveEditTest : public testing::TestWithParam<Param>
 {
 };
 
-auto static get_unit_paths(const Graph & graph)
+auto static get_node_paths(const Graph & graph)
 {
   std::vector<std::string> paths;
-  for (auto & unit : graph.units()) {
-    paths.push_back(unit->path());
+  for (auto & node : graph.nodes()) {
+    paths.push_back(node->path());
   }
   return paths;
 }
 
-TEST_P(GraphConfigTest, ComparePaths)
+TEST_P(RemoveEditTest, ComparePaths)
 {
-  Graph graph;
   auto param = GetParam();
-  graph.create(resource(param.config));
-  auto received_paths = get_unit_paths(graph);
+  auto graph = Graph(resource(param.config));
+  auto received_paths = get_node_paths(graph);
   EXPECT_THAT(received_paths, testing::UnorderedElementsAreArray(param.expected));
 }
 
 // clang-format off
 INSTANTIATE_TEST_SUITE_P(
-  GraphConfigTestcases, GraphConfigTest,
+  RemoveEditTestcases, RemoveEditTest,
   testing::Values(
-    Param{"test3/include-all.yaml", {"/autoware/foo", "/autoware/foobar", "/autoware/bar"}},
-    Param{"test3/remove-one-path.yaml", {"/autoware/foo", "/autoware/bar"}},
-    Param{"test3/remove-two-paths.yaml", {"/autoware/foobar"}},
-    Param{"test3/remove-foo.yaml", {"/autoware/bar"}},
-    Param{"test3/remove-all.yaml", {}}
+    Param{"remove/include-all.yaml", {"/autoware/foo", "/autoware/foobar", "/autoware/bar"}},
+    Param{"remove/remove-one-path.yaml", {"/autoware/foo", "/autoware/bar"}},
+    Param{"remove/remove-two-paths.yaml", {"/autoware/foobar"}},
+    Param{"remove/remove-foo.yaml", {"/autoware/bar"}},
+    Param{"remove/remove-all.yaml", {}}
   )
 );
 // clang-format on
