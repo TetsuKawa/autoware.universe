@@ -90,6 +90,8 @@ public:
   explicit DiagNode(int index, const DiagNodeStruct & msg) : DiagUnit(index), struct_(msg) {}
   DiagnosticStatus create_diagnostic_status() const override;
   DiagnosticLevel level() const override { return status_.level; }
+  DiagnosticLevel input_level() const { return status_.input_level; }
+  DiagnosticLevel latch_level() const { return status_.latch_level; }
 
   void update(const DiagNodeStatus & msg) { status_ = msg; }
   std::string type() const { return struct_.type; }
@@ -110,6 +112,7 @@ public:
   explicit DiagLeaf(int index, const DiagLeafStruct & msg) : DiagUnit(index), struct_(msg) {}
   DiagnosticStatus create_diagnostic_status() const override;
   DiagnosticLevel level() const override { return status_.level; }
+  DiagnosticLevel input_level() const { return status_.input_level; }
 
   void update(const DiagLeafStatus & msg) { status_ = msg; }
   std::string name() const { return struct_.name; }

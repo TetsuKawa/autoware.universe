@@ -141,8 +141,8 @@ void DumpNode::on_update(DiagGraph::ConstSharedPtr graph)
     auto & node = nodes.at(i);
     auto & line = node_table_.at(i);
     line.level = text_level(node->level());
-    // line.input = text_level(node->input());
-    // line.latch = text_level(node->latch());
+    line.input = text_level(node->input_level());
+    line.latch = text_level(node->latch_level());
     std::cout << line.str(width_) << std::endl;
   }
 
@@ -153,7 +153,7 @@ void DumpNode::on_update(DiagGraph::ConstSharedPtr graph)
     auto & diag = diags.at(i);
     auto & line = diag_table_.at(i);
     line.level = text_level(diag->level());
-    // line.input = text_level(diag->input());
+    line.input = text_level(diag->input_level());
     std::cout << line.str(width_) << std::endl;
   }
 }
