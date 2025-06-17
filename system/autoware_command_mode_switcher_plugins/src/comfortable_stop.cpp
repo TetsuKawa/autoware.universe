@@ -69,7 +69,7 @@ void ComfortableStopSwitcher::publish_velocity_limit()
   velocity_limit.constraints.min_acceleration = params_.min_acceleration;
   velocity_limit.constraints.max_jerk = params_.max_jerk;
   velocity_limit.constraints.min_jerk = params_.min_jerk;
-  velocity_limit.sender = node_->get_name();
+  velocity_limit.sender = "comfortable_stop_switcher";
 
   pub_velocity_limit_->publish(velocity_limit);
   RCLCPP_INFO_STREAM(node_->get_logger(), "Comfortable stop is requested.");
@@ -80,7 +80,7 @@ void ComfortableStopSwitcher::publish_velocity_limit_clear_command()
   auto velocity_limit_clear_command = tier4_planning_msgs::msg::VelocityLimitClearCommand();
   velocity_limit_clear_command.stamp = node_->now();
   velocity_limit_clear_command.command = true;
-  velocity_limit_clear_command.sender = node_->get_name();
+  velocity_limit_clear_command.sender = "comfortable_stop_switcher";
 
   pub_velocity_limit_clear_command_->publish(velocity_limit_clear_command);
   RCLCPP_INFO_STREAM(node_->get_logger(), "Comfortable stop is canceled.");
