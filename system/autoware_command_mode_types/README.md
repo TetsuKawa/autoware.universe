@@ -17,12 +17,12 @@ Finally, the control command gate node selects one of these command sources and 
 
 ![command-mode-architecture](./doc/command-mode-architecture.drawio.svg)
 
-## Customization
+## Adding modes and sources
 
 If you want to add a new command mode or command source, It is recommended to create a package that defines the mode and source ID like this package.
 Then, use the defined ID to create plugins and change the settings of each node. For information on assigning IDs, refer to the following sections.
 
-## Command Modes
+## Command modes
 
 The following table lists the mode IDs defined by this package. To add a new ID, follow the rules below.
 
@@ -42,7 +42,7 @@ The following table lists the mode IDs defined by this package. To add a new ID,
 | 2002 | comfortable_stop | MRM comfortable stop                     |
 | 2003 | pull_over        | MRM pull over (not yet supported)        |
 
-## Command Sources
+## Command sources
 
 The following table lists the source IDs defined by this package. To add a new ID, follow the rules below.
 
